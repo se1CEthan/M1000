@@ -1,0 +1,37 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  VITE_SUPABASE_URL = "https://rtsaarapvlzzinmpjdys.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0c2FhcmFwdmx6emlubXBqZHlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NTQ4NzcsImV4cCI6MjA4NDMzMDg3N30.MkYS_GKR3R0FHlRFWJq5AgbzCE7FgnNod2ggCxJN1ho"
+  VITE_APP_URL = "https://seltech.online"
+  VITE_CRYPTOMUS_MERCHANT_UUID = "6e6c1018-48f4-49fd-a10d-36d6cd70eefe"
+  VITE_CRYPTOMUS_PAYMENT_API_KEY = "DSk5vMk3RIBhiQ3qGUw1pH1iYJI1hSSN8iTYmHpm3WpyTj9bsTtIlhadpiFKlK5aVUmpjHH8YoLV9dQsxLAPzpQOdiffl2hzJo0378ExFJB3HMSx49LjTfvnm9qHztoP"
+  VITE_CRYPTOMUS_PAYOUT_API_KEY = "2nuhleS45ns1WTJDX1ZoRG8UAmDFDdahvMafGhU5knS5P3Ozn1Yx0tgRYCmjJpKvtNx0GVQ0FTLo0SNVw1ZM7Zy97fXSsbHX8SGbgGepEHCqwtxw3gIJ8LKDIMDJ3W4s"
+  VITE_CRYPTOMUS_WEBHOOK_SECRET = "seltech_webhook_secret_2024"
+
+[[redirects]]
+  from = "/pesapal/ipn"
+  to = "https://rtsaarapvlzzinmpjdys.supabase.co/functions/v1/pesapal-ipn"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://rtsaarapvlzzinmpjdys.supabase.co wss://rtsaarapvlzzinmpjdys.supabase.co;"

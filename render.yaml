@@ -1,0 +1,57 @@
+services:
+  # Frontend Static Site
+  - type: web
+    name: seltech-marketplace
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_SUPABASE_URL
+        value: https://rtsaarapvlzzinmpjdys.supabase.co
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0c2FhcmFwdmx6emlubXBqZHlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NTQ4NzcsImV4cCI6MjA4NDMzMDg3N30.MkYS_GKR3R0FHlRFWJq5AgbzCE7FgnNod2ggCxJN1ho
+      - key: VITE_APP_NAME
+        value: Seltech
+      - key: VITE_APP_URL
+        value: https://www.seltech.online
+      - key: VITE_APP_DESCRIPTION
+        value: The premier marketplace for developer tools and digital assets
+      - key: VITE_ENABLE_MAINTENANCE_MODE
+        value: false
+      - key: VITE_ENABLE_REGISTRATION
+        value: true
+      - key: VITE_ENABLE_SELLER_REGISTRATION
+        value: true
+
+  # PHP Backend for Cryptomus Integration
+  - type: web
+    name: seltech-php-backend
+    env: php
+    plan: free
+    buildCommand: echo "PHP backend ready"
+    startCommand: php -S 0.0.0.0:$PORT -t php-backend
+    envVars:
+      - key: DB_HOST
+        value: db.rtsaarapvlzzinmpjdys.supabase.co
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASS
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: CRYPTOMUS_MERCHANT_UUID
+        value: 6e6c1018-48f4-49fd-a10d-36d6cd70eefe
+      - key: CRYPTOMUS_PAYMENT_API_KEY
+        sync: false
+      - key: CRYPTOMUS_PAYOUT_API_KEY
+        sync: false
+      - key: CRYPTOMUS_WEBHOOK_SECRET
+        value: seltech_webhook_secret_2024
+      - key: APP_URL
+        value: https://seltech.online
+      - key: APP_NAME
+        value: Seltech

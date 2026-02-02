@@ -1,0 +1,5 @@
+consensus algorithms(Pow, Pos, Poh etc)
+peer-to-peer networking
+cryptography(ECDSA, SHA-256, Merkle Trees)
+transaction validation
+wallet generation/managment

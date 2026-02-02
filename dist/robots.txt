@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://seltech.online/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin-dashboard
+Disallow: /seller-dashboard
+Disallow: /seller-verification
+Disallow: /auth
+Disallow: /auth/callback
+Disallow: /manual-payment
+Disallow: /maintenance
+
+# Allow important pages
+Allow: /
+Allow: /marketplace
+Allow: /bots
+Allow: /software
+Allow: /templates
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /help
+Allow: /faq
+Allow: /sitemap
+Allow: /product/*
+
+# Crawl delay (optional)
+Crawl-delay: 1
