@@ -58,15 +58,10 @@ export default function AdminDashboard() {
   }, [profile]);
 
   const fetchData = async () => {
-    return (
-      <DashboardLayout
-        title="Live Admin Dashboard"
-        subtitle="Real-time platform monitoring and management"
-      >
-        {/* Mobile-Responsive Header with Live Notifications */}
-        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 mb-4 sm:mb-6">
-          <LiveNotificationCenter />
-        </div>
+    try {
+      // Your data fetching logic here (e.g., fetch products, users, etc.)
+      // setProducts(...)
+    } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to load admin data',
