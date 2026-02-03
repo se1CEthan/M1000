@@ -47,17 +47,12 @@ export function LiveEarningsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* ...existing code... */}
       </div>
-
       {/* Payout Progress */}
-      {earnings.pendingBalance > 0 && (
-        </CardContent>
-      </Card>
-    );
-    // ...existing code...
-              <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No transactions yet</p>
-            </div>
-          ) : (
+      {/* ...existing code... */}
+      {/* Recent Transactions */}
+      {/* ...existing code... */}
+    </div>
+  );
             <div className="space-y-3">
               {recentTransactions.map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
