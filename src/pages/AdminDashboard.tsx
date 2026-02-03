@@ -58,21 +58,15 @@ export default function AdminDashboard() {
   }, [profile]);
 
   const fetchData = async () => {
-    try {
-      // Fetch products for review
-      const productsResult = await supabase
-        .from('products')
-        .select(`
-          *,
-          profiles!products_seller_id_fkey(full_name, email, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (productsResult.error) throw productsResult.error;
-
-      setProducts(productsResult.data || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    return (
+      <DashboardLayout
+        title="Live Admin Dashboard"
+        subtitle="Real-time platform monitoring and management"
+      >
+        {/* Mobile-Responsive Header with Live Notifications */}
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 mb-4 sm:mb-6">
+          <LiveNotificationCenter />
+        </div>
       toast({
         title: 'Error',
         description: 'Failed to load admin data',

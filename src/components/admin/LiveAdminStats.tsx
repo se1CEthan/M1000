@@ -108,9 +108,8 @@ export function LiveAdminStats() {
             <div className="text-lg sm:text-2xl font-bold">{stats?.orders.total || 0}</div>
             <div className="flex items-center gap-1 sm:gap-2 mt-2">
               <Badge variant="outline" className="text-xs">
-                <DollarSign className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
-                <span className="hidden sm:inline">${stats?.orders.totalRevenue.toFixed(2) || '0.00'}</span>
-                <span className="sm:hidden">${stats?.orders.totalRevenue.toFixed(0) || '0'}</span>
+                <span className="hidden sm:inline">{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats?.orders.totalRevenue || 0) * 1000)}</span>
+                <span className="sm:hidden">{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats?.orders.totalRevenue || 0) * 1000)}</span>
               </Badge>
               {stats?.orders.todayCount ? (
                 <Badge variant="secondary" className="text-xs">
@@ -121,8 +120,8 @@ export function LiveAdminStats() {
             </div>
             {stats?.orders.todayRevenue ? (
               <div className="text-xs text-green-600 mt-1">
-                <span className="hidden sm:inline">${stats.orders.todayRevenue.toFixed(2)} today</span>
-                <span className="sm:hidden">${stats.orders.todayRevenue.toFixed(0)} today</span>
+                <span className="hidden sm:inline">{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats.orders.todayRevenue || 0) * 1000)} today</span>
+                <span className="sm:hidden">{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats.orders.todayRevenue || 0) * 1000)} today</span>
               </div>
             ) : null}
           </CardContent>
@@ -164,8 +163,8 @@ export function LiveAdminStats() {
           </CardHeader>
           <CardContent>
             <div className="text-lg sm:text-2xl font-bold">
-              <span className="hidden sm:inline">${stats?.orders.totalRevenue.toFixed(2) || '0.00'}</span>
-              <span className="sm:hidden">${stats?.orders.totalRevenue.toFixed(0) || '0'}</span>
+              <span className="hidden sm:inline">{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats?.orders.totalRevenue || 0) * 1000)}</span>
+              <span className="sm:hidden">{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats?.orders.totalRevenue || 0) * 1000)}</span>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 mt-2">
               <Badge variant="outline" className="text-xs">
@@ -174,15 +173,15 @@ export function LiveAdminStats() {
               </Badge>
               {stats?.orders.todayRevenue ? (
                 <Badge variant="secondary" className="text-xs text-green-600">
-                  <span className="hidden sm:inline">+${stats.orders.todayRevenue.toFixed(2)}</span>
-                  <span className="sm:hidden">+${stats.orders.todayRevenue.toFixed(0)}</span>
+                  <span className="hidden sm:inline">+{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats.orders.todayRevenue || 0) * 1000)}</span>
+                  <span className="sm:hidden">+{new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats.orders.todayRevenue || 0) * 1000)}</span>
                 </Badge>
               ) : null}
             </div>
             {stats?.orders.total && stats.orders.total > 0 ? (
               <div className="text-xs text-muted-foreground mt-1">
-                <span className="hidden sm:inline">Avg: ${(stats.orders.totalRevenue / stats.orders.total).toFixed(2)}</span>
-                <span className="sm:hidden">Avg: ${(stats.orders.totalRevenue / stats.orders.total).toFixed(0)}</span>
+                <span className="hidden sm:inline">Avg: {new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats.orders.totalRevenue / stats.orders.total || 0) * 1000)}</span>
+                <span className="sm:hidden">Avg: {new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format((stats.orders.totalRevenue / stats.orders.total || 0) * 1000)}</span>
               </div>
             ) : null}
           </CardContent>
