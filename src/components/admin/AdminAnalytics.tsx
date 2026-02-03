@@ -192,10 +192,12 @@ export function AdminAnalytics() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-UG', {
       style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+      currency: 'UGX',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount * 3700); // Convert USD to UGX
   };
 
   const formatGrowth = (growth: number) => {

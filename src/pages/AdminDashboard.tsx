@@ -160,9 +160,12 @@ export default function AdminDashboard() {
       key: 'price',
       label: 'Price',
       render: (product) => (
-        <span className="text-sm font-medium">
-          ${product.price?.toFixed(2) || '0.00'}
-        </span>
+        <div className="text-sm">
+          <div className="font-medium">${product.price?.toFixed(2) || '0.00'}</div>
+          <div className="text-xs text-muted-foreground">
+            UGX {Math.round((product.price || 0) * 3700).toLocaleString()}
+          </div>
+        </div>
       )
     },
     {
@@ -366,9 +369,12 @@ export default function AdminDashboard() {
                     key: 'price',
                     label: 'Price',
                     render: (product) => (
-                      <span className="text-xs sm:text-sm font-medium">
-                        ${product.price?.toFixed(2) || '0.00'}
-                      </span>
+                      <div className="text-xs sm:text-sm">
+                        <div className="font-medium">${product.price?.toFixed(2) || '0.00'}</div>
+                        <div className="text-xs text-muted-foreground">
+                          UGX {Math.round((product.price || 0) * 3700).toLocaleString()}
+                        </div>
+                      </div>
                     )
                   },
                   {

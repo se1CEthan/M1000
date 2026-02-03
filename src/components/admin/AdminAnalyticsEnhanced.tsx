@@ -269,7 +269,7 @@ export function AdminAnalyticsEnhanced({ products }: AdminAnalyticsEnhancedProps
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Revenue:</span>
                   <span className="font-medium">
-                    ${monthlyData.reduce((sum, month) => sum + month.revenue, 0).toFixed(2)}
+                    UGX {Math.round(monthlyData.reduce((sum, month) => sum + month.revenue, 0) * 3700).toLocaleString()}
                   </span>
                 </div>
               </div>
