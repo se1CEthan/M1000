@@ -22,10 +22,14 @@ export function ProductCard({ product, onWishlist, isWishlisted }: ProductCardPr
   const pricingInfo = PRICING_TYPE_INFO[product.pricing_type];
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    // Add three zeros to the price (multiply by 1000)
+    const ugxPrice = price * 1000;
+    return new Intl.NumberFormat('en-UG', {
       style: 'currency',
-      currency: 'USD',
-    }).format(price);
+      currency: 'UGX',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(ugxPrice);
   };
 
   // Get optimized thumbnail URL

@@ -21,7 +21,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground max-w-xs">
-              Digital marketplace for developers. Buy and sell bots, software, templates, and digital assets. Crypto payments. 90% seller share.
+              Digital marketplace for developers. Buy and sell bots, software, templates, and digital assets. PesaPal payments (MTN, Airtel, Visa, Bank). 90% seller share.
             </p>
             <div className="flex gap-3">
               <a href="#" className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted/50 transition-colors" aria-label="Twitter">
@@ -161,7 +161,7 @@ export function Footer() {
             </p>
           </div>
           <p className="text-sm text-muted-foreground">
-            Payments powered by <span className="font-medium text-foreground">Cryptomus</span>
+            Payments powered by <span className="font-medium text-foreground">PesaPal</span>
           </p>
         </div>
       </div>

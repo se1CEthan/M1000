@@ -76,8 +76,16 @@ export default function ProductDetail() {
       return;
     }
 
-    // INSTANT payment - no modal delays
-    setShowPaymentModal(true);
+    // Confirm payment amount in UGX
+    const ugxAmount = product.price * 1000;
+    const confirmMsg = `You will be redirected to PesaPal to pay ${new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(ugxAmount)} for this product. Continue?`;
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
+    // Redirect to PesaPal payment page
+    const returnUrl = encodeURIComponent(`${window.location.origin}/order-success?product=${product.id}`);
+    window.location.href = `https://store.pesapal.com/seltech?amount=${ugxAmount}&desc=${encodeURIComponent(product.title)}&reference=${product.id}&return_url=${returnUrl}`;
   };
 
   const handlePaymentSuccess = (orderId: string) => {
@@ -200,10 +208,12 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="space-y-2">
               <div className="text-3xl font-bold text-primary">
-                ${product.price.toFixed(2)} USD
-              </div>
-              <div className="text-sm text-muted-foreground">
-                ≈ 0.{Math.floor(product.price * 1000).toString().padStart(6, '0')} BTC
+                {new Intl.NumberFormat('en-UG', {
+                  style: 'currency',
+                  currency: 'UGX',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(product.price * 1000)}
               </div>
             </div>
 
@@ -224,12 +234,12 @@ export default function ProductDetail() {
                 disabled={!user || (user && user.id === product.seller_id)}
               >
                 <Zap className="h-5 w-5 mr-2" />
-                {!user ? 'Login to Buy' : user.id === product.seller_id ? 'Your Product' : 'Buy Now - Multiple Payment Options'}
+                {!user ? 'Login to Buy' : user.id === product.seller_id ? 'Your Product' : 'Buy Now - PesaPal (MTN, Airtel, Visa, Bank and International Cards)'}
               </Button>
               
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                <span>Secure payment • Crypto & Mobile Money • 90% goes to seller</span>
+                <span>Secure payment • PesaPal (MTN, Airtel, Visa, Bank and International Cards) • 90% goes to seller</span>
               </div>
             </div>
 

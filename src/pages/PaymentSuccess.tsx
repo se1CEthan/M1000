@@ -217,7 +217,7 @@ export default function PaymentSuccess() {
               {paymentStatus.statusLabel}
             </h1>
             <p className="text-muted-foreground text-lg">
-              {paymentStatus.status === 'completed' && 'Your cryptocurrency payment has been confirmed'}
+              {paymentStatus.status === 'completed' && 'Your PesaPal payment has been confirmed'}
               {paymentStatus.status === 'pending' && 'We\'re waiting for blockchain confirmation'}
               {paymentStatus.status === 'failed' && 'Your payment could not be processed'}
             </p>

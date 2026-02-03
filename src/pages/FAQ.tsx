@@ -63,7 +63,7 @@ export default function FAQ() {
     {
       id: '3',
       question: 'What payment methods do you accept?',
-      answer: 'We primarily accept cryptocurrency payments including Bitcoin (BTC), Ethereum (ETH), USDT, and other major cryptocurrencies. This ensures fast, secure, and global transactions. We\'re working on adding traditional payment methods in the future.',
+      answer: 'We accept payments through PesaPal including MTN Mobile Money, Airtel Money, Visa/Mastercard, bank transfers, and other international payment cards. This ensures fast, secure, and convenient transactions for customers across Africa and globally.',
       category: 'buying',
       popular: true
     },
@@ -83,8 +83,8 @@ export default function FAQ() {
     },
     {
       id: '6',
-      question: 'How do I set up my crypto wallet for payments?',
-      answer: 'As a seller, you need to configure your crypto wallet to receive payments. Go to your seller dashboard, click on "Crypto Wallet" tab, and add your wallet addresses for the cryptocurrencies you want to accept. Make sure to double-check your wallet addresses as transactions cannot be reversed.',
+      question: 'How do I set up my PesaPal payment methods?',
+      answer: 'As a seller, you need to configure your PesaPal payment details to receive payments. Go to your seller dashboard, click on "Payment Methods" tab, and add your preferred payout method (mobile money, bank account, etc.). Make sure to verify your details as this is where you\'ll receive your earnings.',
       category: 'selling',
       popular: true
     },
@@ -103,7 +103,7 @@ export default function FAQ() {
     {
       id: '9',
       question: 'When do I get paid?',
-      answer: 'Payments are processed automatically to your configured crypto wallet after each successful sale. There\'s typically a short holding period for new sellers to ensure transaction security, after which payments are instant.',
+      answer: 'Payments are processed automatically to your configured PesaPal payment method after each successful sale. Payments are typically processed within 1-3 business days depending on your chosen payout method (mobile money is faster than bank transfers).',
       category: 'selling'
     },
     {

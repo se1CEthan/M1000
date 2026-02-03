@@ -19,6 +19,7 @@ const verificationSchema = z.object({
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),
   date_of_birth: z.string().min(1, 'Date of birth is required'),
   phone_number: z.string().min(10, 'Valid phone number is required'),
+  mobile_money_number: z.string().min(10, 'Valid mobile money number is required for payouts'),
   address_line1: z.string().min(5, 'Address is required'),
   address_line2: z.string().optional(),
   city: z.string().min(2, 'City is required'),
@@ -99,6 +100,7 @@ export function SellerVerificationForm({ onSuccess }: SellerVerificationFormProp
         full_name: data.full_name,
         date_of_birth: data.date_of_birth,
         phone_number: data.phone_number,
+        mobile_money_number: data.mobile_money_number,
         address: {
           line1: data.address_line1,
           line2: data.address_line2 || '',
@@ -186,10 +188,25 @@ export function SellerVerificationForm({ onSuccess }: SellerVerificationFormProp
             <Input
               id="phone_number"
               {...register('phone_number')}
-              placeholder="+1 (555) 123-4567"
+              placeholder="+256 700 123 456"
             />
             {errors.phone_number && (
               <p className="text-sm text-destructive">{errors.phone_number.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mobile_money_number">Mobile Money Number (for payouts) *</Label>
+            <Input
+              id="mobile_money_number"
+              {...register('mobile_money_number')}
+              placeholder="+256 700 123 456 (MTN Mobile Money or Airtel Money)"
+            />
+            <p className="text-xs text-muted-foreground">
+              This number will be used for your seller payouts via mobile money transfer
+            </p>
+            {errors.mobile_money_number && (
+              <p className="text-sm text-destructive">{errors.mobile_money_number.message}</p>
             )}
           </div>
         </CardContent>
@@ -414,7 +431,7 @@ export function SellerVerificationForm({ onSuccess }: SellerVerificationFormProp
               <p>• All products must be original or properly licensed</p>
               <p>• Products will be reviewed before approval</p>
               <p>• You are responsible for customer support and product quality</p>
-              <p>• Payouts are processed weekly to your verified payment method</p>
+              <p>• Payouts are processed weekly to your verified mobile money number</p>
               <p>• You must comply with all applicable laws and regulations</p>
               <p>• Seltech reserves the right to remove products that violate our policies</p>
             </div>

@@ -11,7 +11,7 @@ const PESAPAL_CONFIG = {
   CONSUMER_KEY: 'weWg875DVTHfXKyPK2w2qq0SuZjLKnFx',
   CONSUMER_SECRET: 'owNK+kmjk1tgSYIfOGxuvnxCSos=',
   BASE_URL: 'https://pay.pesapal.com/v3',
-  CURRENCY: 'KES'
+  CURRENCY: 'UGX'
 }
 
 serve(async (req) => {

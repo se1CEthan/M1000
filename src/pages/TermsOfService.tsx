@@ -95,7 +95,7 @@ export default function TermsOfService() {
                 <h3 className="font-semibold text-gray-900 mb-2">Seller Eligibility</h3>
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li>Must complete seller verification process</li>
-                  <li>Must provide valid cryptocurrency wallet addresses</li>
+                  <li>Must provide valid PesaPal payment method details</li>
                   <li>Must comply with all applicable laws and regulations</li>
                   <li>Must own or have rights to sell listed products</li>
                 </ul>
@@ -115,7 +115,7 @@ export default function TermsOfService() {
                 <h3 className="font-semibold text-gray-900 mb-2">Commission and Payments</h3>
                 <p className="text-gray-600">
                   SelTech Online charges a commission on each sale. Payments are processed automatically to your 
-                  configured cryptocurrency wallet after successful transactions, subject to our payment terms.
+                  configured PesaPal payment method after successful transactions, subject to our payment terms.
                 </p>
               </div>
             </CardContent>
@@ -140,7 +140,7 @@ export default function TermsOfService() {
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Payment and Delivery</h3>
                 <p className="text-gray-600">
-                  Payments are processed through cryptocurrency. Digital products are delivered immediately 
+                  Payments are processed through PesaPal (MTN, Airtel, Visa, Bank and International Cards). Digital products are delivered immediately 
                   after payment confirmation via download links or email.
                 </p>
               </div>

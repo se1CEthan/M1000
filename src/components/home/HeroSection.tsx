@@ -56,7 +56,7 @@ export function HeroSection() {
             variants={item}
             className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl"
           >
-            Buy and sell bots, software, templates, and digital assets with crypto.
+            Buy and sell bots, software, templates, and digital assets with <b>PesaPal (MTN, Airtel, Visa, International Cards)</b>.
             Sellers keep 90% of every sale. Already trusted by developers worldwide.
           </motion.p>
 
@@ -99,7 +99,7 @@ export function HeroSection() {
             variants={item}
             className="mt-12 text-sm text-muted-foreground"
           >
-            Processing 10,000+ products · Crypto payments · 90% seller share
+            Processing 10,000+ products · <b>PesaPal (MTN, Airtel, Visa, International Cards)</b> · 90% seller share
           </motion.p>
 
           <motion.div

@@ -11,7 +11,8 @@ import {
   Clock,
   Eye,
   BarChart3,
-  Settings
+  Settings,
+  ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,7 @@ import { LiveActivityFeed } from '@/components/admin/LiveActivityFeed';
 import { SimpleSellerManagement } from '@/components/admin/SimpleSellerManagement';
 import { SellerVerificationReview } from '@/components/admin/SellerVerificationReview';
 import { MaintenanceSettings } from '@/components/admin/MaintenanceSettings';
+import { AdminPurchasesAndPayouts } from '@/components/admin/AdminPurchasesAndPayouts';
 
 interface ProductWithSeller extends Product {
   profiles: {
@@ -273,11 +275,16 @@ export default function AdminDashboard() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-6">
         {/* Mobile-Optimized Tab Navigation */}
         <div className="overflow-x-auto pb-2">
-          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 min-w-max sm:min-w-0 h-auto">
+          <TabsList className="grid w-full grid-cols-5 sm:grid-cols-9 min-w-max sm:min-w-0 h-auto">
             <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Live Overview</span>
               <span className="sm:hidden text-xs">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="purchases" className="text-xs sm:text-sm px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Purchases</span>
+              <span className="sm:hidden text-xs">Sales</span>
             </TabsTrigger>
             <TabsTrigger value="sellers" className="text-xs sm:text-sm px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -387,6 +394,10 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="purchases" className="mt-4">
+          <AdminPurchasesAndPayouts />
         </TabsContent>
 
         <TabsContent value="sellers" className="mt-4">

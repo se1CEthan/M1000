@@ -42,15 +42,15 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
     try {
       console.log('📡 Calling createPesaPalPayment API...');
       
-      // Convert USD to KES (approximate rate: 1 USD = 130 KES)
-      const kesAmount = Math.round(product.price * 130);
+      // Convert USD to UGX (approximate rate: 1 USD = 3700 UGX)
+      const ugxAmount = Math.round(product.price * 3700);
       
       const result = await createPesaPalPayment({
         productId: product.id,
         sellerId: product.seller_id,
         buyerId: user.id,
-        amount: kesAmount,
-        currency: 'KES',
+        amount: ugxAmount,
+        currency: 'UGX',
         productTitle: product.title,
         buyerEmail: user.email
       });
@@ -67,8 +67,8 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
           orderId: result.orderId,
           orderNumber: result.orderId,
           productTitle: product.title,
-          amount: kesAmount,
-          currency: 'KES',
+          amount: ugxAmount,
+          currency: 'UGX',
           trackingId: result.trackingId,
           timestamp: Date.now()
         }));
@@ -82,7 +82,7 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
         });
 
         // Redirect to PesaPal payment page
-        const paymentUrl = `/pesapal-payment?order_id=${result.orderId}&product=${encodeURIComponent(product.title)}&amount=${kesAmount}`;
+        const paymentUrl = `/pesapal-payment?order_id=${result.orderId}&product=${encodeURIComponent(product.title)}&amount=${ugxAmount}`;
         
         if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
           console.log('📱 Mobile redirect to:', paymentUrl);

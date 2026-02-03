@@ -37,22 +37,22 @@ export const PESAPAL_PRODUCTION_CONFIG = {
   CANCEL_URL: 'https://seltech.online/marketplace',
   
   // Supported currencies
-  CURRENCY: 'KES', // Kenyan Shilling (PesaPal's primary currency)
+  CURRENCY: 'UGX', // Ugandan Shilling
 };
 
 // Supported payment methods
 export const PESAPAL_PAYMENT_METHODS = [
   {
-    code: 'MPESA',
-    name: 'M-Pesa',
-    description: 'Pay with M-Pesa mobile money',
+    code: 'MTN_MOBILE_MONEY',
+    name: 'MTN Mobile Money',
+    description: 'Pay with MTN Mobile Money',
     icon: '📱',
     fees: '~1-3%',
     processingTime: 'Instant',
     recommended: true
   },
   {
-    code: 'AIRTEL',
+    code: 'AIRTEL_MONEY',
     name: 'Airtel Money',
     description: 'Pay with Airtel Money',
     icon: '📲',

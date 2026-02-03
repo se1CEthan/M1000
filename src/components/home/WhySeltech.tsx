@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 const features = [
   {
     icon: Wallet,
-    title: 'Crypto Payments',
-    description: 'Pay with Bitcoin, Ethereum, and 20+ cryptocurrencies. Fast, secure, and borderless.',
+    title: 'PesaPal Payments',
+    description: 'Pay with MTN, Airtel, Visa, Bank transfers and International Cards. Fast, secure, and convenient.',
   },
   {
     icon: Shield,
@@ -50,7 +50,7 @@ export function WhySeltech() {
             Your marketplace benefits
           </h2>
           <p className="mt-1.5 text-muted-foreground">
-            Scale without friction. Crypto payments, instant delivery, 90% seller share.
+            Scale without friction. PesaPal payments (MTN, Airtel, Visa, Bank), instant delivery, 90% seller share.
           </p>
         </motion.div>
 

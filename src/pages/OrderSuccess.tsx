@@ -254,7 +254,7 @@ export default function OrderSuccess() {
       case 'completed':
         return {
           title: 'Payment Confirmed!',
-          description: 'Your cryptocurrency payment has been confirmed and your download is ready.',
+          description: 'Your PesaPal payment has been confirmed and your download is ready.',
           color: 'text-green-600'
         };
       case 'failed':
@@ -330,7 +330,7 @@ export default function OrderSuccess() {
                   <div className="text-xl font-bold">${order.total_amount || order.price}</div>
                   {paymentDetails?.amount && (
                     <div className="text-sm text-muted-foreground">
-                      ≈ {paymentDetails.amount} {paymentDetails.currency}
+                      ≈ {paymentDetails.amount} UGX
                     </div>
                   )}
                 </div>
@@ -464,8 +464,8 @@ export default function OrderSuccess() {
             <Alert className="mb-6">
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Your cryptocurrency payment is being processed on the blockchain. This typically takes 5-30 minutes 
-                depending on network congestion. This page will automatically update when confirmed.
+                Your PesaPal payment is being processed. This typically takes 1-5 minutes 
+                depending on your payment method. This page will automatically update when confirmed.
               </AlertDescription>
             </Alert>
           )}
@@ -499,9 +499,9 @@ export default function OrderSuccess() {
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-primary" />
                 <div className="text-sm">
-                  <p className="font-medium">Secure Crypto Payment</p>
+                  <p className="font-medium">Secure PesaPal Payment</p>
                   <p className="text-muted-foreground">
-                    This payment was processed securely through Cryptomus with blockchain verification 
+                    This payment was processed securely through PesaPal with MTN, Airtel, Visa, Bank and International Cards 
                     and automatic revenue splitting.
                   </p>
                 </div>

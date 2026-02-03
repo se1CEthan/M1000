@@ -100,19 +100,19 @@ export default function PesaPalPayment() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Product Price:</span>
-                  <span>KES {displayAmount}</span>
+                  <span>UGX {displayAmount}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Platform Fee (10%):</span>
-                  <span>KES {Math.round(parseFloat(displayAmount) * 0.1)}</span>
+                  <span>UGX {Math.round(parseFloat(displayAmount) * 0.1)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Seller Earnings (90%):</span>
-                  <span>KES {Math.round(parseFloat(displayAmount) * 0.9)}</span>
+                  <span>UGX {Math.round(parseFloat(displayAmount) * 0.9)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold text-lg">
                   <span>Total:</span>
-                  <span>KES {displayAmount}</span>
+                  <span>UGX {displayAmount}</span>
                 </div>
               </div>
 
@@ -137,9 +137,20 @@ export default function PesaPalPayment() {
                   <div className="flex items-center space-x-3">
                     <Smartphone className="h-8 w-8 text-green-600" />
                     <div>
-                      <h3 className="font-semibold">M-Pesa</h3>
-                      <p className="text-sm text-gray-600">Pay with M-Pesa mobile money</p>
+                      <h3 className="font-semibold">MTN Mobile Money</h3>
+                      <p className="text-sm text-gray-600">Pay with MTN Mobile Money</p>
                       <p className="text-xs text-green-600">✓ Instant • ✓ Secure • ✓ Most Popular</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 hover:border-purple-500 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <Smartphone className="h-8 w-8 text-purple-600" />
+                    <div>
+                      <h3 className="font-semibold">Airtel Money</h3>
+                      <p className="text-sm text-gray-600">Pay with Airtel Money</p>
+                      <p className="text-xs text-purple-600">✓ Instant • ✓ Secure • ✓ Popular</p>
                     </div>
                   </div>
                 </div>
@@ -180,7 +191,7 @@ export default function PesaPalPayment() {
                     <iframe 
                       width="300" 
                       height="60" 
-                      src="https://store.pesapal.com/embed-code?pageUrl=https://store.pesapal.com/seltechpayments" 
+                      src="https://store.pesapal.com/embed-code?pageUrl=https://store.pesapal.com/seltech" 
                       frameBorder="0" 
                       allowFullScreen
                       className="border rounded-lg shadow-sm"
@@ -190,7 +201,7 @@ export default function PesaPalPayment() {
 
                   <div className="text-center">
                     <Button 
-                      onClick={() => window.open('https://store.pesapal.com/seltechpayments', '_blank')}
+                      onClick={() => window.open('https://store.pesapal.com/seltech', '_blank')}
                       className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
                       size="lg"
                     >
@@ -234,7 +245,7 @@ export default function PesaPalPayment() {
                   <span className="text-blue-600 font-bold">1</span>
                 </div>
                 <h4 className="font-semibold mb-2">Choose Method</h4>
-                <p className="text-sm text-gray-600">Select M-Pesa, Card, or Bank Transfer</p>
+                <p className="text-sm text-gray-600">Select MTN Mobile Money, Airtel Money, Card, or Bank Transfer</p>
               </div>
               
               <div className="text-center">

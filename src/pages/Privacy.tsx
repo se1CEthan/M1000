@@ -42,7 +42,7 @@ export default function Privacy() {
       title: 'Data Sharing',
       content: [
         'We do not sell your personal information to third parties',
-        'Payment data is processed by Cryptomus (our payment processor)',
+        'Payment data is processed by PesaPal (our payment processor)',
         'We may share data when required by law or to protect our rights',
         'Anonymous usage statistics may be shared for analytics purposes',
         'Seller information is displayed publicly on product pages'
