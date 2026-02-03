@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { DataTable, TableColumn } from '@/components/shared/DataTable';
 import { ProductUploadForm } from '@/components/seller/ProductUploadForm';
-import { CryptoWalletSetup } from '@/components/seller/CryptoWalletSetup';
+import { MobileMoneyPayoutSetup } from '@/components/seller/MobileMoneyPayoutSetup';
 import { LiveEarningsDashboard } from '@/components/seller/LiveEarningsDashboard';
 import { StorageManagement } from '@/components/seller/StorageManagement';
 import { PayoutNotifications } from '@/components/notifications/PayoutNotifications';
@@ -62,12 +62,12 @@ export default function SellerDashboard() {
         supabase
           .from('products')
           .select('*')
-          .eq('seller_id', profile.id)
+          .eq('seller_id', profile.user_id)
           .order('created_at', { ascending: false }),
         supabase
           .from('orders')
           .select('*')
-          .eq('seller_id', profile.id)
+          .eq('seller_id', profile.user_id)
           .order('created_at', { ascending: false })
           .limit(50)
       ]);
@@ -107,7 +107,7 @@ export default function SellerDashboard() {
               const buyerResult = await supabase
                 .from('profiles')
                 .select('full_name, email')
-                .eq('id', order.buyer_id)
+                .eq('user_id', order.buyer_id)
                 .single();
               
               if (!buyerResult.error) {
@@ -126,7 +126,7 @@ export default function SellerDashboard() {
         })
       );
 
-      setProducts(products);
+      setProducts(products as Product[]);
       setOrders(enrichedOrders);
 
     } catch (error) {
@@ -196,7 +196,9 @@ export default function SellerDashboard() {
           </div>
           <div>
             <div className="font-medium">{product.title}</div>
-            <div className="text-sm text-muted-foreground">${product.price}</div>
+            <div className="text-sm text-muted-foreground">
+              ${product.price} (UGX {Math.round((product.price || 0) * 3700).toLocaleString()})
+            </div>
           </div>
         </div>
       )
@@ -271,7 +273,10 @@ export default function SellerDashboard() {
         <div>
           <div className="font-medium">${order.price?.toFixed(2)}</div>
           <div className="text-sm text-muted-foreground">
-            You earn: ${order.seller_earnings?.toFixed(2)}
+            UGX {Math.round((order.price || 0) * 3700).toLocaleString()}
+          </div>
+          <div className="text-xs text-green-600">
+            You earn: UGX {Math.round((order.seller_earnings || order.price * 0.9 || 0) * 3700).toLocaleString()}
           </div>
         </div>
       )
@@ -315,9 +320,9 @@ export default function SellerDashboard() {
             <BarChart3 className="h-4 w-4" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="wallet" className="flex items-center gap-2">
+          <TabsTrigger value="payout" className="flex items-center gap-2">
             <Wallet className="h-4 w-4" />
-            Crypto Wallet
+            Mobile Payout
             {!stats.hasWallet && <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>}
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center gap-2">
@@ -363,8 +368,8 @@ export default function SellerDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="wallet">
-          <CryptoWalletSetup />
+        <TabsContent value="payout">
+          <MobileMoneyPayoutSetup />
         </TabsContent>
 
         <TabsContent value="products">

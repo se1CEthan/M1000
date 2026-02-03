@@ -43,7 +43,7 @@ export function useSellerStats() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = async () => {
-    if (!profile?.id) return;
+    if (!profile?.user_id) return;
 
     try {
       setError(null);
@@ -53,11 +53,11 @@ export function useSellerStats() {
         supabase
           .from('products')
           .select('*')
-          .eq('seller_id', profile.id),
+          .eq('seller_id', profile.user_id),
         supabase
           .from('orders')
           .select('*')
-          .eq('seller_id', profile.id)
+          .eq('seller_id', profile.user_id)
           .order('created_at', { ascending: false })
       ]);
 
@@ -73,7 +73,7 @@ export function useSellerStats() {
         const payoutsResult = await supabase
           .from('payouts')
           .select('*')
-          .eq('seller_id', profile.id)
+          .eq('seller_id', profile.user_id)
           .eq('status', 'completed');
         
         if (!payoutsResult.error) {
@@ -149,7 +149,7 @@ export function useSellerStats() {
         conversionRate: totalViews > 0 ? (totalDownloads / totalViews) * 100 : 0,
         avgRating,
         monthlyGrowth: 12, // Could be calculated from historical data
-        hasWallet: !!profile.wallet_address,
+        hasWallet: !!profile.mobile_money_number,
         pendingBalance,
         recentOrders: recentOrdersWithProducts,
         topProducts
@@ -177,7 +177,7 @@ export function useSellerStats() {
           event: '*', 
           schema: 'public', 
           table: 'orders',
-          filter: `seller_id=eq.${profile?.id}`
+          filter: `seller_id=eq.${profile?.user_id}`
         }, 
         () => {
           fetchStats();
@@ -192,7 +192,7 @@ export function useSellerStats() {
           event: '*', 
           schema: 'public', 
           table: 'products',
-          filter: `seller_id=eq.${profile?.id}`
+          filter: `seller_id=eq.${profile?.user_id}`
         }, 
         () => {
           fetchStats();
@@ -205,7 +205,7 @@ export function useSellerStats() {
       ordersSubscription.unsubscribe();
       productsSubscription.unsubscribe();
     };
-  }, [profile?.id]);
+  }, [profile?.user_id]);
 
   return {
     stats,

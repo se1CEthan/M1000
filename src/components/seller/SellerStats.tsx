@@ -203,7 +203,7 @@ export function SellerStats({ profile, products }: SellerStatsProps) {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full" />
-                <span>Provide demo links and documentation when possible</span>
+                <span>Provide live preview links and documentation when available</span>
               </div>
             </div>
           </CardContent>

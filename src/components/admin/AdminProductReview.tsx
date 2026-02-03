@@ -288,7 +288,7 @@ export function AdminProductReview({ productReview, onBack, onReviewed }: AdminP
 
               {product.demo_url && (
                 <div>
-                  <span className="font-medium">Demo URL:</span>
+                  <span className="font-medium">Preview URL:</span>
                   <a 
                     href={product.demo_url} 
                     target="_blank" 
@@ -353,7 +353,7 @@ export function AdminProductReview({ productReview, onBack, onReviewed }: AdminP
               <p>✓ Original or properly licensed content</p>
               <p>✓ Clear and accurate description</p>
               <p>✓ Appropriate pricing</p>
-              <p>✓ Working demo/documentation links</p>
+              <p>✓ Working preview/documentation links</p>
               <p>✓ No malicious code or content</p>
               <p>✓ Follows platform policies</p>
             </CardContent>

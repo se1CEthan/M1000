@@ -327,7 +327,7 @@ export function ProductReviewDetail({ product, onBack, onReviewed, onAction }: P
                   <div className="flex items-center gap-3">
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Demo URL</p>
+                      <p className="font-medium">Live Preview</p>
                       <p className="text-sm text-muted-foreground truncate max-w-xs">
                         {product.demo_url}
                       </p>
@@ -396,7 +396,7 @@ export function ProductReviewDetail({ product, onBack, onReviewed, onAction }: P
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                <span>Working demo/documentation links</span>
+                <span>Working preview/documentation links</span>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />

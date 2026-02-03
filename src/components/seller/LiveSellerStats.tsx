@@ -63,7 +63,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
               </p>
             </div>
             <Button 
-              onClick={() => onTabChange?.('wallet')}
+              onClick={() => onTabChange?.('payout')}
               className="bg-yellow-600 hover:bg-yellow-700 text-white ml-4"
               size="sm"
             >
@@ -92,7 +92,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
         </Card>
 
         {/* Pending Earnings */}
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onTabChange?.('wallet')}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onTabChange?.('payout')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />

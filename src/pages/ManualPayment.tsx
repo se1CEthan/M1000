@@ -50,13 +50,13 @@ export default function ManualPayment() {
     }
   };
 
-  // Sample wallet addresses for different currencies
+  // Production wallet addresses for different currencies
   const walletAddresses = {
-    USDT: 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE',
-    BTC: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    ETH: '0x742d35Cc6634C0532925a3b8D4C9db96590b5c8e',
-    LTC: 'ltc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
-    TRX: 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE'
+    USDT: process.env.REACT_APP_USDT_WALLET || 'Contact support for wallet address',
+    BTC: process.env.REACT_APP_BTC_WALLET || 'Contact support for wallet address',
+    ETH: process.env.REACT_APP_ETH_WALLET || 'Contact support for wallet address',
+    LTC: process.env.REACT_APP_LTC_WALLET || 'Contact support for wallet address',
+    TRX: process.env.REACT_APP_TRX_WALLET || 'Contact support for wallet address'
   };
 
   const walletAddress = walletAddresses[currency as keyof typeof walletAddresses] || walletAddresses.USDT;

@@ -106,11 +106,11 @@ export function AdminPurchasesAndPayouts() {
           seller_earnings,
           platform_fee,
           product:products(id, title, thumbnail_url),
-          seller:profiles!seller_id(id, full_name, email, mobile_money_number),
-          buyer:profiles!buyer_id(id, full_name, email)
+          seller:profiles!orders_seller_id_fkey(id, full_name, email, mobile_money_number),
+          buyer:profiles!orders_buyer_id_fkey(id, full_name, email)
         `)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (purchasesError) throw purchasesError;
 
@@ -126,7 +126,7 @@ export function AdminPurchasesAndPayouts() {
           payout_method,
           mobile_number,
           processed_at,
-          seller:profiles!seller_id(id, full_name, email, mobile_money_number),
+          seller:profiles!seller_payouts_seller_id_fkey(id, full_name, email, mobile_money_number),
           order:orders(
             id,
             order_number,
@@ -134,7 +134,7 @@ export function AdminPurchasesAndPayouts() {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (payoutsError) throw payoutsError;
 

@@ -456,15 +456,18 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="demo_url">Demo URL</Label>
+                  <Label htmlFor="demo_url">Live Preview URL (Optional)</Label>
                   <Input
                     id="demo_url"
                     type="url"
                     value={formData.demo_url}
                     onChange={(e) => handleInputChange('demo_url', e.target.value)}
-                    placeholder="https://demo.example.com"
+                    placeholder="https://your-product-preview.com"
                     disabled={uploading}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Provide a live preview or working example of your product
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
