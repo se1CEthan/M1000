@@ -23,31 +23,31 @@ interface LiveSellerStatsProps {
 
 export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
   const { stats, loading, error, refetch } = useSellerStats();
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load seller statistics: {error}
-          <Button variant="outline" size="sm" onClick={refetch} className="ml-2">
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Wallet Setup Alert */}
-      {!stats.hasWallet && stats.pendingBalance > 0 && (
+      {/* Phone Number Setup Alert */}
+      {!stats.phoneNumber && stats.pendingBalance > 0 && (
         <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
-          <Wallet className="h-4 w-4 text-yellow-600" />
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="flex items-center justify-between">
             <div>
               <strong className="text-yellow-800 dark:text-yellow-200">
+                UGX {stats.pendingBalance.toLocaleString()} Ready for Payout!
+              </strong>
+              <p className="text-yellow-700 dark:text-yellow-300">
+                Add your phone number to receive mobile money payouts.
+              </p>
+            </div>
+            <Button 
+              onClick={() => onTabChange?.('profile')}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white ml-4"
+              size="sm"
+            >
+              Add Phone Number
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
                 ${stats.pendingBalance.toFixed(2)} Ready for Payout!
               </strong>
               <p className="text-yellow-700 dark:text-yellow-300">

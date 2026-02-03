@@ -59,12 +59,19 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      // Your data fetching logic here (e.g., fetch products, users, etc.)
-      // setProducts(...)
+      setLoading(true);
+      // Fetch products with seller profile info
+      const { data, error } = await supabase
+        .from('products')
+        .select(`*, profiles:profiles!products_seller_id_fkey(full_name, email, avatar_url)`) // Adjust join key as needed
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to load admin data',
+        description: 'Failed to load products',
         variant: 'destructive',
       });
     } finally {

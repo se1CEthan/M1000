@@ -41,82 +41,80 @@ interface RecentTransaction {
 }
 
 export function LiveEarningsDashboard() {
-  const { profile } = useAuth();
-  const [earnings, setEarnings] = useState<EarningsData>({
-    totalEarnings: 0,
-    pendingBalance: 0,
-    thisMonthEarnings: 0,
-    lastMonthEarnings: 0,
-    totalSales: 0,
-    averageOrderValue: 0,
-    nextPayoutAmount: 0,
-    nextPayoutDate: '',
-  });
-  const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  return (
+    <div className="space-y-8">
+      {/* Earnings Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* ...existing code... */}
+      </div>
 
-  useEffect(() => {
-    if (profile) {
-      fetchEarningsData();
-      subscribeToRealTimeUpdates();
-    }
-  }, [profile]);
+      {/* Payout Progress */}
+      {earnings.pendingBalance > 0 && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Next Mobile Money Payout</h3>
+              <span className="text-sm text-muted-foreground">
+                UGX {earnings.pendingBalance.toLocaleString()} / UGX 10,000
+              </span>
+            </div>
+            <Progress value={(earnings.pendingBalance / 10000) * 100} className="mb-2" />
+            <p className="text-sm text-muted-foreground">
+              {earnings.pendingBalance < 10000
+                ? `UGX ${(10000 - earnings.pendingBalance).toLocaleString()} more needed for payout`
+                : 'You are eligible for payout!'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
-  const fetchEarningsData = async () => {
-    try {
-      setLoading(true);
-
-      // Get current month date range
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-
-      // Fetch earnings from orders
-      const { data: orders, error: ordersError } = await supabase
-        .from('orders')
-        .select('seller_earnings, created_at, status')
-        .eq('seller_id', profile?.user_id)
-        .eq('status', 'paid');
-
-      if (ordersError) throw ordersError;
-
-      // Calculate earnings metrics
-      const totalEarnings = orders?.reduce((sum, order) => sum + order.seller_earnings, 0) || 0;
-      const totalSales = orders?.length || 0;
-      const averageOrderValue = totalSales > 0 ? totalEarnings / totalSales : 0;
-
-      const thisMonthEarnings = orders?.filter(order => 
-        new Date(order.created_at) >= startOfMonth
-      ).reduce((sum, order) => sum + order.seller_earnings, 0) || 0;
-
-      const lastMonthEarnings = orders?.filter(order => {
-        const orderDate = new Date(order.created_at);
-        return orderDate >= startOfLastMonth && orderDate <= endOfLastMonth;
-      }).reduce((sum, order) => sum + order.seller_earnings, 0) || 0;
-
-      // Get pending balance
-      const { data: balance } = await supabase
-        .from('seller_pending_balances')
-        .select('amount')
-        .eq('seller_id', profile?.user_id)
-        .single();
-
-      const pendingBalance = balance?.amount || 0;
-
-      // Get recent transactions (orders + payouts)
-      const { data: payouts } = await supabase
-        .from('payouts')
-        .select('*')
-        .eq('seller_id', profile?.user_id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      // Combine and sort transactions
-      const transactions: RecentTransaction[] = [
-        ...(orders?.slice(-10).map(order => ({
-          id: order.id,
+      {/* Recent Transactions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentTransactions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No transactions yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentTransactions.map((transaction) => (
+                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-muted rounded-lg">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{transaction.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(transaction.created_at)}
+                      </p>
+                      {transaction.transaction_id && (
+                        <p className="text-xs font-mono text-muted-foreground">
+                          {transaction.transaction_id.substring(0, 16)}...
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">
+                      {transaction.type === 'sale' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    </p>
+                    <Badge variant="outline" className={getStatusColor(transaction.status)}>
+                      {transaction.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
           type: 'sale' as const,
           amount: order.seller_earnings,
           status: order.status,
