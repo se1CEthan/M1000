@@ -11,8 +11,8 @@ import {
   ArrowUpRight, 
   ArrowDownRight,
   Wallet,
-  CreditCard,
-  RefreshCw
+  RefreshCw,
+  Phone
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/clients';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,53 +41,75 @@ interface RecentTransaction {
 }
 
 export function LiveEarningsDashboard() {
-  return (
-    <div className="space-y-8">
-      {/* Earnings Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* ...existing code... */}
-      </div>
-      {/* Payout Progress */}
-      {/* ...existing code... */}
-      {/* Recent Transactions */}
-      {/* ...existing code... */}
-    </div>
-  );
-            <div className="space-y-3">
-              {recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-muted rounded-lg">
-                      <Phone className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(transaction.created_at)}
-                      </p>
-                      {transaction.transaction_id && (
-                        <p className="text-xs font-mono text-muted-foreground">
-                          {transaction.transaction_id.substring(0, 16)}...
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      {transaction.type === 'sale' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                    </p>
-                    <Badge variant="outline" className={getStatusColor(transaction.status)}>
-                      {transaction.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const { profile } = useAuth();
+  const [earnings, setEarnings] = useState<EarningsData>({
+    totalEarnings: 0,
+    pendingBalance: 0,
+    thisMonthEarnings: 0,
+    lastMonthEarnings: 0,
+    totalSales: 0,
+    averageOrderValue: 0,
+    nextPayoutAmount: 0,
+    nextPayoutDate: '',
+  });
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (profile?.user_id) {
+      fetchEarningsData();
+      const cleanup = subscribeToRealTimeUpdates();
+      return cleanup;
+    }
+  }, [profile?.user_id]);
+
+  const fetchEarningsData = async () => {
+    if (!profile?.user_id) return;
+
+    try {
+      // Fetch orders (sales)
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('seller_id', profile.user_id)
+        .eq('status', 'paid');
+
+      // Fetch payouts
+      const { data: payouts } = await supabase
+        .from('payouts')
+        .select('*')
+        .eq('seller_id', profile.user_id);
+
+      // Calculate earnings
+      const totalEarnings = orders?.reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
+      const totalPayouts = payouts?.reduce((sum, payout) => sum + (payout.amount || 0), 0) || 0;
+      const pendingBalance = totalEarnings - totalPayouts;
+
+      // Calculate monthly earnings
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
+      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+      const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+      const thisMonthEarnings = orders?.filter(order => {
+        const orderDate = new Date(order.created_at);
+        return orderDate.getMonth() === thisMonth && orderDate.getFullYear() === thisYear;
+      }).reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
+
+      const lastMonthEarnings = orders?.filter(order => {
+        const orderDate = new Date(order.created_at);
+        return orderDate.getMonth() === lastMonth && orderDate.getFullYear() === lastMonthYear;
+      }).reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
+
+      const totalSales = orders?.length || 0;
+      const averageOrderValue = totalSales > 0 ? totalEarnings / totalSales : 0;
+
+      // Combine transactions
+      const transactions: RecentTransaction[] = [
+        ...(orders?.map(order => ({
+          id: order.id,
           type: 'sale' as const,
           amount: order.seller_earnings,
           status: order.status,
@@ -99,9 +121,9 @@ export function LiveEarningsDashboard() {
           type: 'payout' as const,
           amount: payout.amount,
           status: payout.status,
-          description: payout.description || 'Payout',
+          description: 'Mobile Money Payout',
           created_at: payout.created_at,
-          transaction_id: payout.transaction_id,
+          transaction_id: payout.transaction_hash,
         })) || [])
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
