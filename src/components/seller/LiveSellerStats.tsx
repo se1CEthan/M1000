@@ -26,16 +26,16 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
   return (
     <div className="space-y-6">
       {/* Phone Number Setup Alert */}
-      {!stats.phoneNumber && stats.pendingBalance > 0 && (
+      {!stats.hasWallet && stats.pendingBalance > 0 && (
         <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
-          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="flex items-center justify-between">
             <div>
               <strong className="text-yellow-800 dark:text-yellow-200">
                 UGX {stats.pendingBalance.toLocaleString()} Ready for Payout!
               </strong>
               <p className="text-yellow-700 dark:text-yellow-300">
-                Add your phone number to receive mobile money payouts.
+                Add your mobile money number to receive payouts.
               </p>
             </div>
             <Button 
@@ -48,10 +48,18 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
           </AlertDescription>
         </Alert>
       )}
-                ${stats.pendingBalance.toFixed(2)} Ready for Payout!
+
+      {/* Mobile Money Setup Alert */}
+      {!stats.hasWallet && stats.pendingEarnings > 0 && (
+        <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+          <Wallet className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <div>
+              <strong className="text-yellow-800 dark:text-yellow-200">
+                UGX {(stats.pendingEarnings * 3700).toLocaleString()} Ready for Payout!
               </strong>
               <p className="text-yellow-700 dark:text-yellow-300">
-                Setup your crypto wallet to receive automatic payouts.
+                Setup your mobile money number to receive automatic payouts.
               </p>
             </div>
             <Button 
@@ -59,7 +67,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
               className="bg-yellow-600 hover:bg-yellow-700 text-white ml-4"
               size="sm"
             >
-              Setup Wallet
+              Setup Mobile Money
             </Button>
           </AlertDescription>
         </Alert>
@@ -75,10 +83,10 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${loading ? '...' : stats.totalRevenue.toFixed(2)}
+              UGX {loading ? '...' : (stats.totalRevenue * 3700).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              +${stats.thisMonthRevenue.toFixed(2)} this month
+              +UGX {(stats.thisMonthRevenue * 3700).toLocaleString()} this month
             </p>
           </CardContent>
         </Card>
@@ -91,10 +99,10 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              ${loading ? '...' : stats.pendingEarnings.toFixed(2)}
+              UGX {loading ? '...' : (stats.pendingEarnings * 3700).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.hasWallet ? 'Auto-payout enabled' : 'Setup wallet for payout'}
+              {stats.hasWallet ? 'Auto-payout enabled' : 'Setup mobile money for payout'}
             </p>
           </CardContent>
         </Card>
@@ -205,7 +213,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium text-sm">${order.seller_earnings?.toFixed(2)}</div>
+                      <div className="font-medium text-sm">UGX {(order.seller_earnings * 3700)?.toLocaleString()}</div>
                       <Badge 
                         variant={order.status === 'paid' ? 'default' : 'secondary'}
                         className="text-xs"
@@ -247,7 +255,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
                       </div>
                       <div>
                         <div className="font-medium text-sm">{product.title}</div>
-                        <div className="text-xs text-muted-foreground">${product.price}</div>
+                        <div className="text-xs text-muted-foreground">UGX {(product.price * 3700).toLocaleString()}</div>
                       </div>
                     </div>
                     <div className="text-right">
