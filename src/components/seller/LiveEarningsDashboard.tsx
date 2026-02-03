@@ -50,32 +50,10 @@ export function LiveEarningsDashboard() {
 
       {/* Payout Progress */}
       {earnings.pendingBalance > 0 && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">Next Mobile Money Payout</h3>
-              <span className="text-sm text-muted-foreground">
-                UGX {earnings.pendingBalance.toLocaleString()} / UGX 10,000
-              </span>
-            </div>
-            <Progress value={(earnings.pendingBalance / 10000) * 100} className="mb-2" />
-            <p className="text-sm text-muted-foreground">
-              {earnings.pendingBalance < 10000
-                ? `UGX ${(10000 - earnings.pendingBalance).toLocaleString()} more needed for payout`
-                : 'You are eligible for payout!'}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentTransactions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+        </CardContent>
+      </Card>
+    );
+    // ...existing code...
               <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No transactions yet</p>
             </div>

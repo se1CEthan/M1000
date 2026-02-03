@@ -18,7 +18,7 @@ import { supabase } from '@/integrations/supabase/clients';
 const verificationSchema = z.object({
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),
   date_of_birth: z.string().min(1, 'Date of birth is required'),
-    phone_number: z.string().min(10, 'Valid phone number is required')
+    phone_number: z.string().min(10, 'Valid phone number is required'),
     // Removed wallet, only phone number for seller verification
     // mobile_money_number: z.string().min(10, 'Valid mobile money number is required for payouts'),
   address_line1: z.string().min(5, 'Address is required'),
