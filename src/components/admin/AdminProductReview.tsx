@@ -180,10 +180,7 @@ export function AdminProductReview({ productReview, onBack, onReviewed }: AdminP
                     <div>
                       <span className="font-medium">Price:</span> 
                       <div className="inline-block ml-2">
-                        <span className="font-semibold">${product.price}</span>
-                        <span className="text-sm text-muted-foreground ml-2">
-                          (UGX {Math.round((product.price || 0) * 3700).toLocaleString()})
-                        </span>
+                        <span className="font-semibold">UGX {Math.round((product.price || 0) * 3700).toLocaleString()}</span>
                       </div>
                     </div>
                     <div>

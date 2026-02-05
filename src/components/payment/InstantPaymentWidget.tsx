@@ -42,7 +42,7 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
     try {
       console.log('📡 Calling createPesaPalPayment API...');
       
-      // Convert USD to UGX (approximate rate: 1 USD = 3700 UGX)
+      // Convert USD stored price to UGX for payment
       const ugxAmount = Math.round(product.price * 3700);
       
       const result = await createPesaPalPayment({

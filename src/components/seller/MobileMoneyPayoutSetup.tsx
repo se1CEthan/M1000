@@ -117,7 +117,15 @@ export function MobileMoneyPayoutSetup() {
         })
         .eq('user_id', profile?.user_id);
 
-      if (error) throw error;
+      if (error) {
+        // If the column doesn't exist, provide a helpful error message
+        if (error.message.includes('mobile_money_number')) {
+          toast.error('Database schema needs to be updated. Please contact support to add mobile money support.');
+          console.error('Mobile money columns missing from profiles table. Run the migration script.');
+          return;
+        }
+        throw error;
+      }
 
       await refreshProfile();
       toast.success('Mobile money details saved successfully!');

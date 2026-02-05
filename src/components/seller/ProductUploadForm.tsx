@@ -14,12 +14,10 @@ import {
   File, 
   Image as ImageIcon, 
   CheckCircle, 
-  AlertTriangle,
   DollarSign,
   Package,
   Tag,
   Globe,
-  FileText,
   Zap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/clients';
@@ -81,9 +79,9 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
 
   const pricingTypes = [
     { value: 'one_time', label: 'One-time Purchase' },
-    { value: 'subscription', label: 'Subscription' },
-    { value: 'freemium', label: 'Freemium' },
-    { value: 'free', label: 'Free' }
+    { value: 'subscription_monthly', label: 'Monthly Subscription' },
+    { value: 'subscription_yearly', label: 'Yearly Subscription' },
+    { value: 'custom', label: 'Custom Pricing' }
   ];
 
   const handleInputChange = (field: keyof ProductFormData, value: any) => {
@@ -197,22 +195,32 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
 
       // Create product record
       setUploadProgress(75);
+      
+      // Generate slug from title
+      const slug = formData.title.trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      
       const productData = {
-        seller_id: profile.id,
+        seller_id: profile.user_id, // Use user_id instead of id
         title: formData.title.trim(),
+        slug: slug,
         description: formData.description.trim(),
         short_description: formData.short_description.trim() || null,
-        category: formData.category,
+        category: formData.category as 'bots' | 'software' | 'templates' | 'assets' | 'apis' | 'plugins',
         tags: formData.tags,
-        price: formData.price,
-        pricing_type: formData.pricing_type,
+        price: formData.price / 3700, // Convert UGX to USD for storage
+        pricing_type: formData.pricing_type as 'one_time' | 'subscription_monthly' | 'subscription_yearly' | 'custom',
         version: formData.version.trim(),
         demo_url: formData.demo_url.trim() || null,
         documentation_url: formData.documentation_url.trim() || null,
         file_url: productFileUrl.publicUrl,
         file_size: files.productFile!.size,
         thumbnail_url: thumbnailUrl.publicUrl,
-        status: 'pending'
+        status: 'pending' as 'pending' | 'draft' | 'approved' | 'rejected' | 'suspended'
       };
 
       const { error: insertError } = await supabase
@@ -375,20 +383,20 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price (USD)</Label>
+                  <Label htmlFor="price">Price (UGX)</Label>
                   <Input
                     id="price"
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="1000"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
-                    placeholder="0.00"
-                    disabled={uploading || formData.pricing_type === 'free'}
+                    placeholder="37000"
+                    disabled={uploading || formData.pricing_type === 'custom'}
                   />
-                  {formData.pricing_type !== 'free' && (
+                  {formData.pricing_type !== 'custom' && (
                     <p className="text-xs text-muted-foreground">
-                      You'll receive 90% (${(formData.price * 0.9).toFixed(2)}) per sale
+                      You'll receive 90% (UGX {Math.round(formData.price * 0.9).toLocaleString()}) per sale
                     </p>
                   )}
                 </div>
@@ -408,7 +416,7 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
                     value={currentTag}
                     onChange={(e) => setCurrentTag(e.target.value)}
                     placeholder="Add a tag"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                     disabled={uploading}
                   />
                   <Button type="button" onClick={addTag} disabled={uploading}>

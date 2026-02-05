@@ -22,8 +22,8 @@ export function ProductCard({ product, onWishlist, isWishlisted }: ProductCardPr
   const pricingInfo = PRICING_TYPE_INFO[product.pricing_type];
 
   const formatPrice = (price: number) => {
-    // Add three zeros to the price (multiply by 1000)
-    const ugxPrice = price * 1000;
+    // Convert USD to UGX (1 USD = 3700 UGX)
+    const ugxPrice = price * 3700;
     return new Intl.NumberFormat('en-UG', {
       style: 'currency',
       currency: 'UGX',

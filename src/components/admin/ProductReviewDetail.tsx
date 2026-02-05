@@ -204,10 +204,7 @@ export function ProductReviewDetail({ product, onBack, onReviewed, onAction }: P
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Price:</span>
                       <div>
-                        <span className="font-semibold">${product.price?.toFixed(2) || '0.00'}</span>
-                        <span className="text-sm text-muted-foreground ml-2">
-                          (UGX {Math.round((product.price || 0) * 3700).toLocaleString()})
-                        </span>
+                        <span className="font-semibold">UGX {Math.round((product.price || 0) * 3700).toLocaleString()}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

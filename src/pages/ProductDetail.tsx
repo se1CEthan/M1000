@@ -77,7 +77,7 @@ export default function ProductDetail() {
     }
 
     // Confirm payment amount in UGX
-    const ugxAmount = product.price * 1000;
+    const ugxAmount = product.price * 3700;
     const confirmMsg = `You will be redirected to PesaPal to pay ${new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(ugxAmount)} for this product. Continue?`;
     if (!window.confirm(confirmMsg)) {
       return;
@@ -213,7 +213,7 @@ export default function ProductDetail() {
                   currency: 'UGX',
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
-                }).format(product.price * 1000)}
+                }).format(product.price * 3700)}
               </div>
             </div>
 

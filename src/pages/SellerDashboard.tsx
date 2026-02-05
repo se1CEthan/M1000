@@ -197,7 +197,7 @@ export default function SellerDashboard() {
           <div>
             <div className="font-medium">{product.title}</div>
             <div className="text-sm text-muted-foreground">
-              ${product.price} (UGX {Math.round((product.price || 0) * 3700).toLocaleString()})
+              UGX {Math.round((product.price || 0) * 3700).toLocaleString()}
             </div>
           </div>
         </div>
@@ -271,10 +271,7 @@ export default function SellerDashboard() {
       label: 'Amount',
       render: (order) => (
         <div>
-          <div className="font-medium">${order.price?.toFixed(2)}</div>
-          <div className="text-sm text-muted-foreground">
-            UGX {Math.round((order.price || 0) * 3700).toLocaleString()}
-          </div>
+          <div className="font-medium">UGX {Math.round((order.price || 0) * 3700).toLocaleString()}</div>
           <div className="text-xs text-green-600">
             You earn: UGX {Math.round((order.seller_earnings || order.price * 0.9 || 0) * 3700).toLocaleString()}
           </div>

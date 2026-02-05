@@ -198,7 +198,7 @@ export function LiveEarningsDashboard() {
 
   const requestPayout = async () => {
     if (earnings.pendingBalance < 10) {
-      toast.error('Minimum payout amount is $10');
+      toast.error('Minimum payout amount is UGX 37,000');
       return;
     }
 
@@ -238,10 +238,12 @@ export function LiveEarningsDashboard() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-UG', {
       style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+      currency: 'UGX',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount * 3700); // Convert USD to UGX
   };
 
   const formatDate = (dateString: string) => {
@@ -378,7 +380,7 @@ export function LiveEarningsDashboard() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">Next Payout Progress</h3>
               <span className="text-sm text-muted-foreground">
-                {formatCurrency(earnings.pendingBalance)} / $10.00
+                {formatCurrency(earnings.pendingBalance)} / UGX 37,000
               </span>
             </div>
             <Progress value={(earnings.pendingBalance / 10) * 100} className="mb-2" />
