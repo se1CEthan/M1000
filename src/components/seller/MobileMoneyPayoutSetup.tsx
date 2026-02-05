@@ -56,21 +56,21 @@ export function MobileMoneyPayoutSetup() {
   }, [profile]);
 
   const fetchPayoutStats = async () => {
-    if (!profile?.user_id) return;
+    if (!profile?.id) return;
 
     try {
       // Fetch seller earnings from orders
       const { data: orders } = await supabase
         .from('orders')
         .select('seller_earnings, created_at, status')
-        .eq('seller_id', profile.user_id)
+        .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
         .eq('status', 'paid');
 
       // Fetch completed payouts
       const { data: payouts } = await supabase
         .from('seller_payouts')
         .select('amount, created_at, status')
-        .eq('seller_id', profile.user_id)
+        .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
         .eq('status', 'completed');
 
       const totalEarnings = orders?.reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
@@ -115,7 +115,7 @@ export function MobileMoneyPayoutSetup() {
           mobile_money_provider: provider,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', profile?.user_id);
+        .eq('user_id', profile?.user_id); // Keep user_id for profiles table update
 
       if (error) {
         // If the column doesn't exist, provide a helpful error message
@@ -154,7 +154,7 @@ export function MobileMoneyPayoutSetup() {
       const { error } = await supabase
         .from('seller_payouts')
         .insert({
-          seller_id: profile.user_id,
+          seller_id: profile.id, // Use profile.id for seller_payouts table
           amount: payoutStats.pendingAmount,
           currency: 'USD',
           mobile_number: profile.mobile_money_number,

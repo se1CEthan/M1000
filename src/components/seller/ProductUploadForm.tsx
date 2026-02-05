@@ -167,8 +167,8 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
     try {
       // Generate unique file names
       const timestamp = Date.now();
-      const productFileName = `${profile.user_id}/${timestamp}_${files.productFile!.name}`;
-      const thumbnailFileName = `${profile.user_id}/${timestamp}_thumbnail_${files.thumbnail!.name}`;
+      const productFileName = `${profile.id}/${timestamp}_${files.productFile!.name}`;
+      const thumbnailFileName = `${profile.id}/${timestamp}_thumbnail_${files.thumbnail!.name}`;
 
       // Upload product file
       setUploadProgress(25);
@@ -205,7 +205,7 @@ export function ProductUploadForm({ onSuccess, onCancel }: ProductUploadFormProp
         .trim();
       
       const productData = {
-        seller_id: profile.user_id, // Use user_id instead of id
+        seller_id: profile.id, // Use profile.id instead of profile.user_id
         title: formData.title.trim(),
         slug: slug,
         description: formData.description.trim(),

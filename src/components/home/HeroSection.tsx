@@ -81,7 +81,6 @@ export function HeroSection() {
               className="group rounded-xl border-accent/60 bg-transparent hover:bg-accent/10 transition-all duration-300 hover:shadow-[0_0_28px_hsl(var(--accent)_/_0.25)]"
             >
               <Link to="/auth?redirect=freelancing">
-                Start freelancing
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Button>

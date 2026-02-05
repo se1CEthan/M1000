@@ -62,12 +62,12 @@ export default function SellerDashboard() {
         supabase
           .from('products')
           .select('*')
-          .eq('seller_id', profile.user_id)
+          .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
           .order('created_at', { ascending: false }),
         supabase
           .from('orders')
           .select('*')
-          .eq('seller_id', profile.user_id)
+          .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
           .order('created_at', { ascending: false })
           .limit(50)
       ]);
@@ -107,7 +107,7 @@ export default function SellerDashboard() {
               const buyerResult = await supabase
                 .from('profiles')
                 .select('full_name, email')
-                .eq('user_id', order.buyer_id)
+                .eq('id', order.buyer_id) // Use id instead of user_id
                 .single();
               
               if (!buyerResult.error) {

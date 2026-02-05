@@ -92,8 +92,8 @@ export function AdminPurchasesAndPayouts() {
     try {
       setLoading(true);
 
-      // Fetch purchases with seller and buyer info
-      const { data: purchasesData, error: purchasesError } = await supabase
+      // Fetch purchases (orders) with basic info first
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
           id,
@@ -105,16 +105,74 @@ export function AdminPurchasesAndPayouts() {
           payment_method,
           seller_earnings,
           platform_fee,
-          product:products(id, title, thumbnail_url),
-          seller:profiles!orders_seller_id_fkey(id, full_name, email, mobile_money_number),
-          buyer:profiles!orders_buyer_id_fkey(id, full_name, email)
+          product_id,
+          seller_id,
+          buyer_id
         `)
         .order('created_at', { ascending: false })
         .limit(500);
 
-      if (purchasesError) throw purchasesError;
+      if (ordersError) throw ordersError;
 
-      // Fetch seller payouts
+      // Enrich orders with product, seller, and buyer information
+      const enrichedPurchases = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          let product = null;
+          let seller = null;
+          let buyer = null;
+
+          // Fetch product info
+          if (order.product_id) {
+            try {
+              const { data: productData } = await supabase
+                .from('products')
+                .select('id, title, thumbnail_url')
+                .eq('id', order.product_id)
+                .single();
+              product = productData;
+            } catch (error) {
+              console.log('Could not fetch product for order:', order.id);
+            }
+          }
+
+          // Fetch seller info
+          if (order.seller_id) {
+            try {
+              const { data: sellerData } = await supabase
+                .from('profiles')
+                .select('id, full_name, email, mobile_money_number')
+                .eq('id', order.seller_id)
+                .single();
+              seller = sellerData;
+            } catch (error) {
+              console.log('Could not fetch seller for order:', order.id);
+            }
+          }
+
+          // Fetch buyer info
+          if (order.buyer_id) {
+            try {
+              const { data: buyerData } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .eq('id', order.buyer_id)
+                .single();
+              buyer = buyerData;
+            } catch (error) {
+              console.log('Could not fetch buyer for order:', order.id);
+            }
+          }
+
+          return {
+            ...order,
+            product: product || { id: '', title: 'Unknown Product', thumbnail_url: null },
+            seller: seller || { id: '', full_name: 'Unknown Seller', email: '', mobile_money_number: null },
+            buyer: buyer || { id: '', full_name: 'Unknown Buyer', email: '' }
+          };
+        })
+      );
+
+      // Fetch seller payouts with basic info
       const { data: payoutsData, error: payoutsError } = await supabase
         .from('seller_payouts')
         .select(`
@@ -126,20 +184,84 @@ export function AdminPurchasesAndPayouts() {
           payout_method,
           mobile_number,
           processed_at,
-          seller:profiles!seller_payouts_seller_id_fkey(id, full_name, email, mobile_money_number),
-          order:orders(
-            id,
-            order_number,
-            product:products(title)
-          )
+          seller_id,
+          order_id
         `)
         .order('created_at', { ascending: false })
         .limit(500);
 
-      if (payoutsError) throw payoutsError;
+      // Don't throw error if seller_payouts table doesn't exist
+      let enrichedPayouts: SellerPayout[] = [];
+      if (!payoutsError && payoutsData) {
+        // Enrich payouts with seller and order information
+        enrichedPayouts = await Promise.all(
+          payoutsData.map(async (payout) => {
+            let seller = null;
+            let order = null;
 
-      setPurchases(purchasesData || []);
-      setPayouts(payoutsData || []);
+            // Fetch seller info
+            if (payout.seller_id) {
+              try {
+                const { data: sellerData } = await supabase
+                  .from('profiles')
+                  .select('id, full_name, email, mobile_money_number')
+                  .eq('id', payout.seller_id)
+                  .single();
+                seller = sellerData;
+              } catch (error) {
+                console.log('Could not fetch seller for payout:', payout.id);
+              }
+            }
+
+            // Fetch order info
+            if (payout.order_id) {
+              try {
+                const { data: orderData } = await supabase
+                  .from('orders')
+                  .select('id, order_number, product_id')
+                  .eq('id', payout.order_id)
+                  .single();
+                
+                if (orderData) {
+                  // Fetch product title for the order
+                  let productTitle = 'Unknown Product';
+                  if (orderData.product_id) {
+                    try {
+                      const { data: productData } = await supabase
+                        .from('products')
+                        .select('title')
+                        .eq('id', orderData.product_id)
+                        .single();
+                      if (productData) {
+                        productTitle = productData.title;
+                      }
+                    } catch (error) {
+                      console.log('Could not fetch product for payout order:', payout.id);
+                    }
+                  }
+                  
+                  order = {
+                    id: orderData.id,
+                    order_number: orderData.order_number,
+                    product: { title: productTitle }
+                  };
+                }
+              } catch (error) {
+                console.log('Could not fetch order for payout:', payout.id);
+              }
+            }
+
+            return {
+              ...payout,
+              seller: seller || { id: '', full_name: 'Unknown Seller', email: '', mobile_money_number: null },
+              order: order || { id: '', order_number: 'N/A', product: { title: 'N/A' } }
+            };
+          })
+        );
+      }
+
+      setPurchases(enrichedPurchases);
+      setPayouts(enrichedPayouts);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
