@@ -82,6 +82,7 @@ export function HeroSection() {
             >
               <Link to="/auth?redirect=freelancing">
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                Start with Freelancing
               </Link>
             </Button>
             <SmartSellerButton
