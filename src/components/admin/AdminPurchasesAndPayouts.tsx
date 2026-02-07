@@ -135,12 +135,12 @@ export function AdminPurchasesAndPayouts() {
             }
           }
 
-          // Fetch seller info
+          // Fetch seller info using seller_id (which is profiles.id)
           if (order.seller_id) {
             try {
               const { data: sellerData } = await supabase
                 .from('profiles')
-                .select('id, full_name, email, mobile_money_number')
+                .select('id, user_id, full_name, email, mobile_money_number')
                 .eq('id', order.seller_id)
                 .single();
               seller = sellerData;
@@ -149,12 +149,12 @@ export function AdminPurchasesAndPayouts() {
             }
           }
 
-          // Fetch buyer info
+          // Fetch buyer info using buyer_id (which is profiles.id)
           if (order.buyer_id) {
             try {
               const { data: buyerData } = await supabase
                 .from('profiles')
-                .select('id, full_name, email')
+                .select('id, user_id, full_name, email')
                 .eq('id', order.buyer_id)
                 .single();
               buyer = buyerData;
@@ -172,92 +172,96 @@ export function AdminPurchasesAndPayouts() {
         })
       );
 
-      // Fetch seller payouts with basic info
-      const { data: payoutsData, error: payoutsError } = await supabase
-        .from('seller_payouts')
-        .select(`
-          id,
-          created_at,
-          amount,
-          currency,
-          status,
-          payout_method,
-          mobile_number,
-          processed_at,
-          seller_id,
-          order_id
-        `)
-        .order('created_at', { ascending: false })
-        .limit(500);
-
-      // Don't throw error if seller_payouts table doesn't exist
+      // Fetch seller payouts with basic info (skip if table doesn't exist)
       let enrichedPayouts: SellerPayout[] = [];
-      if (!payoutsError && payoutsData) {
-        // Enrich payouts with seller and order information
-        enrichedPayouts = await Promise.all(
-          payoutsData.map(async (payout) => {
-            let seller = null;
-            let order = null;
+      try {
+        const { data: payoutsData, error: payoutsError } = await supabase
+          .from('seller_payouts' as any)
+          .select(`
+            id,
+            created_at,
+            amount,
+            currency,
+            status,
+            payout_method,
+            mobile_number,
+            processed_at,
+            seller_id,
+            order_id
+          `)
+          .order('created_at', { ascending: false })
+          .limit(500);
 
-            // Fetch seller info
-            if (payout.seller_id) {
-              try {
-                const { data: sellerData } = await supabase
-                  .from('profiles')
-                  .select('id, full_name, email, mobile_money_number')
-                  .eq('id', payout.seller_id)
-                  .single();
-                seller = sellerData;
-              } catch (error) {
-                console.log('Could not fetch seller for payout:', payout.id);
-              }
-            }
+        if (!payoutsError && payoutsData) {
+          // Enrich payouts with seller and order information
+          enrichedPayouts = await Promise.all(
+            payoutsData.map(async (payout: any) => {
+              let seller = null;
+              let order = null;
 
-            // Fetch order info
-            if (payout.order_id) {
-              try {
-                const { data: orderData } = await supabase
-                  .from('orders')
-                  .select('id, order_number, product_id')
-                  .eq('id', payout.order_id)
-                  .single();
-                
-                if (orderData) {
-                  // Fetch product title for the order
-                  let productTitle = 'Unknown Product';
-                  if (orderData.product_id) {
-                    try {
-                      const { data: productData } = await supabase
-                        .from('products')
-                        .select('title')
-                        .eq('id', orderData.product_id)
-                        .single();
-                      if (productData) {
-                        productTitle = productData.title;
-                      }
-                    } catch (error) {
-                      console.log('Could not fetch product for payout order:', payout.id);
-                    }
-                  }
-                  
-                  order = {
-                    id: orderData.id,
-                    order_number: orderData.order_number,
-                    product: { title: productTitle }
-                  };
+              // Fetch seller info
+              if (payout.seller_id) {
+                try {
+                  const { data: sellerData } = await supabase
+                    .from('profiles')
+                    .select('id, user_id, full_name, email, mobile_money_number')
+                    .eq('id', payout.seller_id)
+                    .single();
+                  seller = sellerData;
+                } catch (error) {
+                  console.log('Could not fetch seller for payout:', payout.id);
                 }
-              } catch (error) {
-                console.log('Could not fetch order for payout:', payout.id);
               }
-            }
 
-            return {
-              ...payout,
-              seller: seller || { id: '', full_name: 'Unknown Seller', email: '', mobile_money_number: null },
-              order: order || { id: '', order_number: 'N/A', product: { title: 'N/A' } }
-            };
-          })
-        );
+              // Fetch order info
+              if (payout.order_id) {
+                try {
+                  const { data: orderData } = await supabase
+                    .from('orders')
+                    .select('id, order_number, product_id')
+                    .eq('id', payout.order_id)
+                    .single();
+                  
+                  if (orderData) {
+                    // Fetch product title for the order
+                    let productTitle = 'Unknown Product';
+                    if (orderData.product_id) {
+                      try {
+                        const { data: productData } = await supabase
+                          .from('products')
+                          .select('title')
+                          .eq('id', orderData.product_id)
+                          .single();
+                        if (productData) {
+                          productTitle = productData.title;
+                        }
+                      } catch (error) {
+                        console.log('Could not fetch product for payout order:', payout.id);
+                      }
+                    }
+                    
+                    order = {
+                      id: orderData.id,
+                      order_number: orderData.order_number,
+                      product: { title: productTitle }
+                    };
+                  }
+                } catch (error) {
+                  console.log('Could not fetch order for payout:', payout.id);
+                }
+              }
+
+              return {
+                ...payout,
+                seller: seller || { id: '', full_name: 'Unknown Seller', email: '', mobile_money_number: null },
+                order: order || { id: '', order_number: 'N/A', product: { title: 'N/A' } }
+              };
+            })
+          );
+        }
+      } catch (payoutError) {
+        console.log('Seller payouts table not available:', payoutError);
+        // Continue without payouts data
       }
 
       setPurchases(enrichedPurchases);
@@ -347,9 +351,9 @@ export function AdminPurchasesAndPayouts() {
       purchase.seller?.mobile_money_number || 'N/A',
       purchase.buyer?.full_name || 'N/A',
       purchase.buyer?.email || 'N/A',
-      purchase.price || 0,
-      purchase.seller_earnings || 0,
-      purchase.platform_fee || 0,
+      Math.round((purchase.price || 0) * 3700),
+      Math.round((purchase.seller_earnings || 0) * 3700),
+      Math.round((purchase.platform_fee || 0) * 3700),
       purchase.status,
       purchase.payment_method || 'N/A'
     ]);
@@ -377,7 +381,7 @@ export function AdminPurchasesAndPayouts() {
       payout.seller?.full_name || 'N/A',
       payout.seller?.email || 'N/A',
       payout.mobile_number || payout.seller?.mobile_money_number || 'N/A',
-      payout.amount || 0,
+      Math.round((payout.amount || 0) * 3700),
       payout.status,
       payout.order?.product?.title || 'N/A',
       payout.order?.order_number || 'N/A',
@@ -470,12 +474,12 @@ export function AdminPurchasesAndPayouts() {
       label: 'Amount',
       render: (purchase) => (
         <div className="space-y-1">
-          <div className="font-bold">UGX {purchase.price?.toLocaleString() || '0'}</div>
+          <div className="font-bold">UGX {Math.round((purchase.price || 0) * 3700).toLocaleString()}</div>
           <div className="text-xs text-green-600">
-            Seller: UGX {purchase.seller_earnings?.toLocaleString() || '0'}
+            Seller: UGX {Math.round((purchase.seller_earnings || 0) * 3700).toLocaleString()}
           </div>
           <div className="text-xs text-blue-600">
-            Platform: UGX {purchase.platform_fee?.toLocaleString() || '0'}
+            Platform: UGX {Math.round((purchase.platform_fee || 0) * 3700).toLocaleString()}
           </div>
         </div>
       )
@@ -531,7 +535,7 @@ export function AdminPurchasesAndPayouts() {
       label: 'Amount',
       render: (payout) => (
         <div className="font-bold text-green-600">
-          UGX {payout.amount?.toLocaleString() || '0'}
+          UGX {Math.round((payout.amount || 0) * 3700).toLocaleString()}
         </div>
       )
     },
@@ -603,10 +607,10 @@ export function AdminPurchasesAndPayouts() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              UGX {purchases.reduce((sum, p) => sum + (p.price || 0), 0).toLocaleString()}
+              UGX {Math.round(purchases.reduce((sum, p) => sum + (p.price || 0), 0) * 3700).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Platform: UGX {purchases.reduce((sum, p) => sum + (p.platform_fee || 0), 0).toLocaleString()}
+              Platform: UGX {Math.round(purchases.reduce((sum, p) => sum + (p.platform_fee || 0), 0) * 3700).toLocaleString()}
             </p>
           </CardContent>
         </Card>
@@ -621,7 +625,7 @@ export function AdminPurchasesAndPayouts() {
               {payouts.filter(p => p.status === 'pending').length}
             </div>
             <p className="text-xs text-muted-foreground">
-              UGX {payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}
+              UGX {Math.round(payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0) * 3700).toLocaleString()}
             </p>
           </CardContent>
         </Card>
@@ -711,8 +715,8 @@ export function AdminPurchasesAndPayouts() {
             data={payouts}
             columns={payoutColumns}
             loading={loading}
-            searchKey="seller.full_name"
-            searchPlaceholder="Search by seller name..."
+            searchKey="id"
+            searchPlaceholder="Search by payout ID..."
             filters={[
               {
                 key: 'status',
