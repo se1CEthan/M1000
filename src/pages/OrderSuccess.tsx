@@ -16,7 +16,20 @@ import { toast } from 'sonner';
 export default function OrderSuccess() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const orderId = searchParams.get('order') || searchParams.get('order_id');
+  
+  // Handle multiple parameter formats:
+  // - order_id: Our standard format
+  // - order: Alternative format
+  // - product: Product ID (fallback)
+  // - reference: PesaPal reference (our order ID)
+  // - OrderMerchantReference: PesaPal format (our order ID)
+  // - OrderTrackingId: PesaPal tracking ID
+  const orderId = searchParams.get('order_id') || 
+                  searchParams.get('order') || 
+                  searchParams.get('reference') ||
+                  searchParams.get('product') ||
+                  searchParams.get('OrderMerchantReference');
+  const pesapalTrackingId = searchParams.get('OrderTrackingId');
   const status = searchParams.get('status');
   
   const [order, setOrder] = useState<Order | null>(null);
@@ -121,9 +134,90 @@ export default function OrderSuccess() {
   };
 
   const fetchOrderDetails = async () => {
-    if (!orderId || !user) return;
+    if (!user) return;
+    
+    // If we don't have an order ID but have a PesaPal tracking ID, look up by tracking ID
+    if (!orderId && pesapalTrackingId) {
+      try {
+        // First, get the user's profile ID
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!profileData) {
+          setError('User profile not found');
+          setLoading(false);
+          return;
+        }
+
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            product:products(*),
+            seller:profiles!seller_id(*)
+          `)
+          .eq('payment_id', pesapalTrackingId)
+          .eq('buyer_id', profileData.id)
+          .single();
+
+        if (orderError || !orderData) {
+          // Try alternative field name
+          const { data: orderData2, error: orderError2 } = await supabase
+            .from('orders')
+            .select(`
+              *,
+              product:products(*),
+              seller:profiles!seller_id(*)
+            `)
+            .eq('pesapal_tracking_id', pesapalTrackingId)
+            .eq('buyer_id', profileData.id)
+            .single();
+
+          if (orderError2 || !orderData2) {
+            setError('Order not found. Please check your email for order details.');
+            setLoading(false);
+            return;
+          }
+
+          setOrder(orderData2 as unknown as Order);
+          setProduct(orderData2.product as Product);
+          setPaymentStatus(orderData2.status);
+          setLoading(false);
+          return;
+        }
+
+        setOrder(orderData as unknown as Order);
+        setProduct(orderData.product as Product);
+        setPaymentStatus(orderData.status);
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error('Error fetching order by tracking ID:', error);
+        setError('Failed to load order details');
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (!orderId) return;
 
     try {
+      // First, get the user's profile ID
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) {
+        setError('User profile not found');
+        setLoading(false);
+        return;
+      }
+
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
@@ -132,7 +226,7 @@ export default function OrderSuccess() {
           seller:profiles!seller_id(*)
         `)
         .eq('id', orderId)
-        .eq('buyer_id', user.id)
+        .eq('buyer_id', profileData.id)
         .single();
 
       if (orderError || !orderData) {
