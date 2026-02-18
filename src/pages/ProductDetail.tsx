@@ -59,9 +59,93 @@ export default function ProductDetail() {
     }
   };
 
-  const handleBuyNow = () => {
-    // Directly redirect to Pesapal store for payment
-    window.location.href = 'https://store.pesapal.com/seltech';
+  const handleBuyNow = async () => {
+    if (!user) {
+      toast.error('Please log in to purchase this product');
+      return;
+    }
+
+    if (!product) {
+      toast.error('Product not found');
+      return;
+    }
+
+    // Check if user is trying to buy their own product
+    if (user.id === product.seller_id) {
+      toast.error('You cannot purchase your own product');
+      return;
+    }
+
+    try {
+      // Get user's profile ID
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) {
+        toast.error('User profile not found');
+        return;
+      }
+
+      // Create order first
+      const ugxAmount = Math.round(product.price * 3700);
+      const platformFee = product.price * 0.1;
+      const sellerEarnings = product.price * 0.9;
+
+      // Generate unique order number
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          buyer_id: profile.id,
+          seller_id: product.seller_id,
+          product_id: product.id,
+          order_number: orderNumber,
+          status: 'pending',
+          price: product.price,
+          platform_fee: platformFee,
+          seller_earnings: sellerEarnings,
+          payment_method: 'pesapal',
+          currency: 'USD'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        toast.error('Failed to create order: ' + orderError.message);
+        return;
+      }
+
+      console.log('Order created:', order);
+
+      // Confirm payment amount in UGX
+      const confirmMsg = `You will be redirected to PesaPal to pay UGX ${ugxAmount.toLocaleString()} for "${product.title}". Continue?`;
+      if (!window.confirm(confirmMsg)) {
+        // Delete the order if user cancels
+        await supabase.from('orders').delete().eq('id', order.id);
+        return;
+      }
+
+      // Redirect to PesaPal store with order ID in return URL
+      const returnUrl = encodeURIComponent(`${window.location.origin}/order-success?order_id=${order.id}`);
+      const cancelUrl = encodeURIComponent(`${window.location.origin}/product/${product.slug}`);
+      
+      // PesaPal Store URL format
+      const pesapalUrl = `https://store.pesapal.com/seltech?amount=${ugxAmount}&desc=${encodeURIComponent(product.title)}&reference=${order.id}&return_url=${returnUrl}&cancel_url=${cancelUrl}`;
+      
+      console.log('Redirecting to PesaPal:', pesapalUrl);
+      console.log('Return URL will be:', `${window.location.origin}/order-success?order_id=${order.id}`);
+      
+      window.location.href = pesapalUrl;
+      
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      toast.error(error.message || 'Failed to initiate payment');
+    }
   };
 
   const handlePaymentSuccess = (orderId: string) => {

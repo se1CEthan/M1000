@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/clients';
 import { Order, Product } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { error } from 'console';
 
 export default function OrderSuccess() {
   const [searchParams] = useSearchParams();
@@ -41,14 +42,28 @@ export default function OrderSuccess() {
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
   useEffect(() => {
+    console.log('OrderSuccess mounted');
+    console.log('User:', user);
+    console.log('Order ID from URL:', orderId);
+    console.log('PesaPal Tracking ID:', pesapalTrackingId);
+    console.log('All URL params:', Object.fromEntries(searchParams.entries()));
+    
     if (user) {
       // If we have an order ID, fetch that specific order
       if (orderId) {
+        console.log('Fetching order details for:', orderId);
         fetchOrderDetails();
       } else {
         // If no order ID, get the most recent pending/completed order for this user
+        console.log('No order ID, fetching latest order');
         fetchLatestOrder();
       }
+    } else {
+      console.log('No user logged in');
+      setError('Please log in to view your order');
+      setLoading(false);
+    }
+  }, [orderId, user]);
       
       // Poll payment status every 10 seconds for pending payments
       const interval = setInterval(() => {
@@ -202,21 +217,36 @@ export default function OrderSuccess() {
       }
     }
 
-    if (!orderId) return;
+    if (!orderId) {
+      console.log('No order ID provided');
+      return;
+    }
 
     try {
+      console.log('Fetching profile for user:', user.id);
       // First, get the user's profile ID
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        setError('User profile not found. Please contact support.');
+        setLoading(false);
+        return;
+      }
+
       if (!profileData) {
+        console.error('No profile data returned');
         setError('User profile not found');
         setLoading(false);
         return;
       }
+
+      console.log('Profile found:', profileData.id);
+      console.log('Looking up order:', orderId, 'for buyer:', profileData.id);
 
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -229,19 +259,51 @@ export default function OrderSuccess() {
         .eq('buyer_id', profileData.id)
         .single();
 
-      if (orderError || !orderData) {
+      if (orderError) {
+        console.error('Order fetch error:', orderError);
+        
+        // Try without buyer_id check (maybe it's someone else's order or admin viewing)
+        console.log('Trying to fetch order without buyer_id check...');
+        const { data: orderData2, error: orderError2 } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            product:products(*),
+            seller:profiles!seller_id(*)
+          `)
+          .eq('id', orderId)
+          .single();
+
+        if (orderError2 || !orderData2) {
+          console.error('Order not found even without buyer check:', orderError2);
+          setError(`Order not found. Order ID: ${orderId}. Please check your email or contact support.`);
+          setLoading(false);
+          return;
+        }
+
+        console.log('Order found (without buyer check):', orderData2);
+        setOrder(orderData2 as unknown as Order);
+        setProduct(orderData2.product as Product);
+        setPaymentStatus(orderData2.status);
+        setLoading(false);
+        return;
+      }
+
+      if (!orderData) {
+        console.error('No order data returned');
         setError('Order not found or access denied');
         setLoading(false);
         return;
       }
 
+      console.log('Order found:', orderData);
       setOrder(orderData as unknown as Order);
       setProduct(orderData.product as Product);
       setPaymentStatus(orderData.status);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching order:', error);
-      setError('Failed to load order details');
+      setError('Failed to load order details: ' + (error as Error).message);
       setLoading(false);
     }
   };
