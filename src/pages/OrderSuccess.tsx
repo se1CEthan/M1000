@@ -58,12 +58,6 @@ export default function OrderSuccess() {
         console.log('No order ID, fetching latest order');
         fetchLatestOrder();
       }
-    } else {
-      console.log('No user logged in');
-      setError('Please log in to view your order');
-      setLoading(false);
-    }
-  }, [orderId, user]);
       
       // Poll payment status every 10 seconds for pending payments
       const interval = setInterval(() => {
@@ -72,6 +66,10 @@ export default function OrderSuccess() {
         }
       }, 10000);
       return () => clearInterval(interval);
+    } else {
+      console.log('No user logged in');
+      setError('Please log in to view your order');
+      setLoading(false);
     }
   }, [orderId, user, paymentStatus]);
 
