@@ -77,10 +77,25 @@ export default function OrderSuccess() {
     if (!user) return;
 
     try {
+      // Get user's profile ID first
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) {
+        setError('User profile not found');
+        setLoading(false);
+        return;
+      }
+
       // First check localStorage for pending order info
       const pendingOrderStr = localStorage.getItem('pendingOrder');
       if (pendingOrderStr) {
         const pendingOrder = JSON.parse(pendingOrderStr);
+        console.log('Found pending order in localStorage:', pendingOrder);
+        
         // Check if it's recent (within last 2 hours)
         if (Date.now() - pendingOrder.timestamp < 2 * 60 * 60 * 1000) {
           // Try to fetch this specific order
@@ -92,10 +107,11 @@ export default function OrderSuccess() {
               seller:profiles!seller_id(*)
             `)
             .eq('id', pendingOrder.orderId)
-            .eq('buyer_id', user.id)
+            .eq('buyer_id', profileData.id)
             .single();
 
           if (!orderError && orderData) {
+            console.log('Order found from localStorage:', orderData);
             setOrder(orderData as unknown as Order);
             setProduct(orderData.product as Product);
             setPaymentStatus(orderData.status);
@@ -114,6 +130,7 @@ export default function OrderSuccess() {
       }
 
       // Fallback: Get the most recent order for this user (within last hour)
+      console.log('Fetching most recent order for profile:', profileData.id);
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       
       const { data: orderData, error: orderError } = await supabase
@@ -123,18 +140,20 @@ export default function OrderSuccess() {
           product:products(*),
           seller:profiles!seller_id(*)
         `)
-        .eq('buyer_id', user.id)
+        .eq('buyer_id', profileData.id)
         .gte('created_at', oneHourAgo)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       if (orderError || !orderData) {
+        console.error('No recent order found:', orderError);
         setError('No recent order found. Please check your order history.');
         setLoading(false);
         return;
       }
 
+      console.log('Found recent order:', orderData);
       setOrder(orderData as unknown as Order);
       setProduct(orderData.product as Product);
       setPaymentStatus(orderData.status);

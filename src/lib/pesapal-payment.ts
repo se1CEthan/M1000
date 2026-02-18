@@ -33,7 +33,7 @@ export const PESAPAL_PRODUCTION_CONFIG = {
   SELLER_EARNINGS_PERCENTAGE: 0.90, // 90% to seller
   
   // Success/Return URLs
-  SUCCESS_URL: 'https://seltech.online/order-success',
+  SUCCESS_URL: 'https://seltech.online/payment-callback',
   CANCEL_URL: 'https://seltech.online/marketplace',
   
   // Supported currencies
@@ -179,12 +179,12 @@ export async function createPesaPalPayment(
         product_id: request.productId,
         seller_id: request.sellerId,
         buyer_id: request.buyerId,
-        price: revenueSplit.totalAmount,
-        platform_fee: revenueSplit.platformFee,
-        seller_earnings: revenueSplit.sellerEarnings,
+        price: request.amount / 3700, // Store as USD
+        platform_fee: revenueSplit.platformFee / 3700,
+        seller_earnings: revenueSplit.sellerEarnings / 3700,
         status: 'pending',
         payment_method: 'pesapal',
-        currency: PESAPAL_PRODUCTION_CONFIG.CURRENCY
+        currency: 'UGX'
       })
       .select()
       .single();
@@ -199,15 +199,15 @@ export async function createPesaPalPayment(
     // Prepare PesaPal payment data
     const paymentData = {
       id: order.id,
-      currency: PESAPAL_PRODUCTION_CONFIG.CURRENCY,
-      amount: revenueSplit.totalAmount,
+      currency: 'UGX',
+      amount: request.amount,
       description: `Purchase: ${request.productTitle}`,
-      callback_url: `${PESAPAL_PRODUCTION_CONFIG.SUCCESS_URL}?order_id=${order.id}`,
-      notification_id: 'https://www.seltech.online/pesapal/ipn',
+      callback_url: `${PESAPAL_PRODUCTION_CONFIG.SUCCESS_URL}?OrderMerchantReference=${order.id}`,
+      notification_id: PESAPAL_PRODUCTION_CONFIG.WEBHOOK_URL,
       billing_address: {
         email_address: request.buyerEmail || '',
         phone_number: request.buyerPhone || '',
-        country_code: 'KE',
+        country_code: 'UG',
         first_name: 'Customer',
         last_name: 'Purchase'
       }
