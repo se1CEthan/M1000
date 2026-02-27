@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Product } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
-import { createPaymentInvoice, calculateRevenueSplit } from '@/lib/cryptomus';
+import { calculateRevenueSplit } from '@/lib/cryptomus';
 import { supabase } from '@/integrations/supabase/clients';
 import { toast } from 'sonner';
 
@@ -102,22 +102,36 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
 
       console.log('📋 Creating Cryptomus invoice:', invoiceData);
 
-      const result = await createPaymentInvoice(invoiceData);
+      // Call our backend API instead of Cryptomus directly (to avoid CORS)
+      const apiResponse = await fetch(`${baseUrl}/api/create-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(invoiceData)
+      });
 
-      console.log('📋 Cryptomus Result:', result);
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        throw new Error(errorData.error || 'Failed to create payment');
+      }
 
-      if (result.state === 0 && result.result?.url) {
+      const result = await apiResponse.json();
+
+      console.log('📋 Payment API Result:', result);
+
+      if (result.success && result.payment_url) {
         console.log('✅ Cryptomus payment created successfully');
-        console.log('🔗 Payment URL:', result.result.url);
-        console.log('💳 Payment UUID:', result.result.uuid);
+        console.log('🔗 Payment URL:', result.payment_url);
+        console.log('💳 Payment UUID:', result.payment_id);
 
         // Update order with payment details
         await supabase
           .from('orders')
           .update({
-            payment_id: result.result.uuid,
-            payment_url: result.result.url,
-            crypto_currency: result.result.currency || 'USDT'
+            payment_id: result.payment_id,
+            payment_url: result.payment_url,
+            crypto_currency: result.currency || 'USDT'
           })
           .eq('id', order.id);
 
@@ -128,8 +142,8 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
           productTitle: product.title,
           amount: product.price,
           currency: 'USD',
-          paymentId: result.result.uuid,
-          paymentUrl: result.result.url,
+          paymentId: result.payment_id,
+          paymentUrl: result.payment_url,
           timestamp: Date.now()
         }));
 
@@ -145,7 +159,7 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
         // Redirect to Cryptomus payment page
         console.log('🚀 Redirecting to Cryptomus payment page...');
         setTimeout(() => {
-          window.location.href = result.result.url;
+          window.location.href = result.payment_url;
         }, 1000);
 
       } else {
@@ -156,11 +170,11 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
           .from('orders')
           .update({ 
             status: 'failed',
-            error_message: 'Payment invoice creation failed'
+            error_message: result.error || 'Payment invoice creation failed'
           })
           .eq('id', order.id);
         
-        throw new Error('Failed to create payment invoice');
+        throw new Error(result.error || 'Failed to create payment invoice');
       }
 
     } catch (error: any) {
