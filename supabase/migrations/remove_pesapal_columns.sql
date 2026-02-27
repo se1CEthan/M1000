@@ -1,6 +1,9 @@
 -- Migration: Remove PesaPal columns and update to Cryptomus
 -- This migration removes PesaPal-specific columns from the orders table
 
+-- Temporarily disable the update trigger to avoid errors
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
+
 -- Remove PesaPal-specific columns if they exist
 DO $$ 
 BEGIN
@@ -22,10 +25,24 @@ BEGIN
         RAISE NOTICE 'Updated payment_method default to cryptomus';
     END IF;
 
-    -- Update existing 'pesapal' payment methods to 'cryptomus'
-    UPDATE orders SET payment_method = 'cryptomus' WHERE payment_method = 'pesapal';
-    RAISE NOTICE 'Updated existing pesapal orders to cryptomus';
+END $$;
 
+-- Update existing 'pesapal' payment methods to 'cryptomus' (without trigger)
+UPDATE orders SET payment_method = 'cryptomus' WHERE payment_method = 'pesapal';
+
+-- Recreate the trigger if updated_at column exists
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'updated_at'
+    ) THEN
+        CREATE TRIGGER update_orders_updated_at 
+            BEFORE UPDATE ON orders 
+            FOR EACH ROW 
+            EXECUTE FUNCTION update_updated_at_column();
+        RAISE NOTICE 'Recreated update trigger for orders table';
+    END IF;
 END $$;
 
 -- Drop PesaPal-related indexes if they exist

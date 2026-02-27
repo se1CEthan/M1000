@@ -211,19 +211,6 @@ export default function OrderSuccess() {
       }
     }
 
-        setOrder(orderData as unknown as Order);
-        setProduct(orderData.product as Product);
-        setPaymentStatus(orderData.status);
-        setLoading(false);
-        return;
-      } catch (error) {
-        console.error('Error fetching order by tracking ID:', error);
-        setError('Failed to load order details');
-        setLoading(false);
-        return;
-      }
-    }
-
     if (!orderId) {
       console.log('No order ID provided');
       return;
