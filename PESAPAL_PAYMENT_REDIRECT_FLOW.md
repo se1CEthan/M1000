@@ -301,4 +301,7 @@ https://seltech.online/order-success?order_id=550e8400-e29b-41d4-a716-4466554400
 
 **The product is tracked through the order record, not through the URL alone.**
 
-The URL just carries the order ID, which is the reference to look up all the details (product, seller, buyer, price) from the database.
+The URL just carries the order ID, which is the reference to look up all the detai
+5. **Add Email Notifications** for receipts
+
+The download URL is already configured and ready to use!

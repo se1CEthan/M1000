@@ -698,8 +698,7 @@ export function AdminPurchasesAndPayouts() {
                 key: 'payment_method',
                 label: 'Payment Method',
                 options: [
-                  { value: 'pesapal', label: 'PesaPal' },
-                  { value: 'cryptomus', label: 'Crypto' },
+                  { value: 'cryptomus', label: 'Cryptocurrency' },
                   { value: 'manual', label: 'Manual' }
                 ]
               }

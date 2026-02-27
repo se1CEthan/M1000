@@ -76,61 +76,8 @@ export default function ProductDetail() {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      // Get user's profile ID
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile) {
-        toast.error('User profile not found');
-        setLoading(false);
-        return;
-      }
-
-      // Use PesaPal API integration
-      const { createPesaPalPayment } = await import('@/lib/pesapal-payment');
-      
-      toast.info('Creating payment request...');
-      
-      const paymentResult = await createPesaPalPayment({
-        productId: product.id,
-        sellerId: product.seller_id,
-        buyerId: profile.id,
-        amount: product.price * 3700, // Convert to UGX
-        currency: 'UGX',
-        productTitle: product.title,
-        buyerEmail: profile.email,
-        buyerPhone: ''
-      });
-
-      if (paymentResult.success && paymentResult.paymentUrl) {
-        console.log('Payment created successfully:', paymentResult);
-        
-        // Store order ID in localStorage as backup
-        if (paymentResult.orderId) {
-          localStorage.setItem('pendingOrder', JSON.stringify({
-            orderId: paymentResult.orderId,
-            productId: product.id,
-            timestamp: Date.now()
-          }));
-        }
-        
-        // Redirect to PesaPal payment page
-        window.location.href = paymentResult.paymentUrl;
-      } else {
-        throw new Error(paymentResult.error || 'Failed to create payment');
-      }
-      
-    } catch (error: any) {
-      console.error('Error creating payment:', error);
-      toast.error(error.message || 'Failed to initiate payment');
-      setLoading(false);
-    }
+    // Open Cryptomus payment modal
+    setShowPaymentModal(true);
   };
 
   const handlePaymentSuccess = (orderId: string) => {
@@ -279,12 +226,12 @@ export default function ProductDetail() {
                 disabled={!user || (user && user.id === product.seller_id)}
               >
                 <Zap className="h-5 w-5 mr-2" />
-                {!user ? 'Login to Buy' : user.id === product.seller_id ? 'Your Product' : 'Buy Now - PesaPal (MTN, Airtel, Visa, Bank and International Cards)'}
+                {!user ? 'Login to Buy' : user.id === product.seller_id ? 'Your Product' : 'Buy Now - Pay with Crypto'}
               </Button>
               
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                <span>Secure payment • PesaPal (MTN, Airtel, Visa, Bank and International Cards) • 90% goes to seller</span>
+                <span>Secure payment • Cryptocurrency • 90% goes to seller</span>
               </div>
             </div>
 

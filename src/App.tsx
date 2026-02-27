@@ -49,7 +49,7 @@ const ReviewSystem = lazy(() => import("./pages/ReviewSystem"));
 const DisputeResolution = lazy(() => import("./pages/DisputeResolution"));
 const FreelancerSearch = lazy(() => import("./pages/FreelancerSearch"));
 const MessagingCenter = lazy(() => import("./pages/MessagingCenter"));
-const PesaPalPayment = lazy(() => import("./pages/PesaPalPayment"));
+const CryptomusPayment = lazy(() => import("./pages/CryptomusPayment"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
 // Loading component
@@ -125,7 +125,7 @@ const App = () => {
                     <Route path="/freelancer/contracts/:contractId/dispute" element={<DisputeResolution />} />
                     <Route path="/business/freelancers" element={<FreelancerSearch />} />
                     <Route path="/messages" element={<MessagingCenter />} />
-                    <Route path="/pesapal-payment" element={<PesaPalPayment />} />
+                    <Route path="/cryptomus-payment" element={<CryptomusPayment />} />
                     <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="/notifications" element={<NotificationCenter />} />
                     <Route path="*" element={<NotFound />} />

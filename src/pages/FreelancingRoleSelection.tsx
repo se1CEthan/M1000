@@ -44,7 +44,7 @@ export default function FreelancingRoleSelection() {
       features: [
         'Create a professional profile',
         'Browse and apply to projects',
-        'Secure PesaPal payments',
+        'Secure cryptocurrency payments',
         'Build your reputation',
         'Set your own rates'
       ],

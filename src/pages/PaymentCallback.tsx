@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/clients';
-import { checkPesaPalPaymentStatus } from '@/lib/pesapal-payment';
+import { checkPaymentStatus } from '@/lib/cryptomus';
 
 export default function PaymentCallback() {
   const [searchParams] = useSearchParams();
@@ -16,30 +16,20 @@ export default function PaymentCallback() {
 
   const verifyPayment = async () => {
     try {
-      // Get parameters from PesaPal redirect
-      const orderTrackingId = searchParams.get('OrderTrackingId');
-      const orderMerchantReference = searchParams.get('OrderMerchantReference');
+      // Get parameters from Cryptomus redirect
+      const orderId = searchParams.get('order_id') || searchParams.get('order');
+      const paymentId = searchParams.get('payment_id') || searchParams.get('uuid');
       
       console.log('Payment callback received:', {
-        orderTrackingId,
-        orderMerchantReference
+        orderId,
+        paymentId
       });
 
-      if (!orderTrackingId && !orderMerchantReference) {
-        throw new Error('Missing payment parameters');
-      }
-
-      // Verify payment status with PesaPal API
-      let paymentStatus;
-      if (orderTrackingId) {
-        setMessage('Verifying payment with PesaPal...');
-        paymentStatus = await checkPesaPalPaymentStatus(orderTrackingId);
-        console.log('Payment status from PesaPal:', paymentStatus);
+      if (!orderId) {
+        throw new Error('Missing order ID');
       }
 
       // Find the order in database
-      const orderId = orderMerchantReference || orderTrackingId;
-      
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .select('*')
@@ -50,15 +40,27 @@ export default function PaymentCallback() {
         throw new Error('Order not found');
       }
 
+      // Verify payment status with Cryptomus API if we have payment ID
+      let paymentStatus;
+      if (order.payment_id) {
+        setMessage('Verifying payment with Cryptomus...');
+        try {
+          const statusResponse = await checkPaymentStatus(order.payment_id);
+          paymentStatus = statusResponse.result;
+          console.log('Payment status from Cryptomus:', paymentStatus);
+        } catch (error) {
+          console.error('Error checking payment status:', error);
+        }
+      }
+
       // Update order status if payment is confirmed
-      if (paymentStatus?.isPaid) {
+      if (paymentStatus?.payment_status === 'paid' || paymentStatus?.payment_status === 'paid_over') {
         setMessage('Payment confirmed! Updating order...');
         
         const { error: updateError } = await supabase
           .from('orders')
           .update({
             status: 'paid',
-            payment_id: orderTrackingId,
             completed_at: new Date().toISOString()
           })
           .eq('id', order.id);
@@ -80,13 +82,13 @@ export default function PaymentCallback() {
           navigate(`/order-success?order_id=${order.id}`);
         }, 2000);
       } else {
-        // Payment not confirmed yet or failed
-        setStatus('failed');
-        setMessage('Payment verification failed. Please contact support.');
+        // Payment not confirmed yet - redirect to success page anyway
+        // The webhook will update the status when payment is confirmed
+        setMessage('Payment pending confirmation...');
         
         setTimeout(() => {
           navigate(`/order-success?order_id=${order.id}`);
-        }, 3000);
+        }, 2000);
       }
 
     } catch (error: any) {

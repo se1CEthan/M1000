@@ -85,7 +85,7 @@ const { data: order } = await supabase
    ↓ Customer pays
 
 4. PesaPal redirects to:
-   https://www.seltech.online/order-success?order_id=e17e63e4-7bc1-413c-b2ed-9834ed5ac495
+i want some
    ↓ Extract order_id
 
 5. System looks up order:

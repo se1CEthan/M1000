@@ -22,15 +22,12 @@ export default function OrderSuccess() {
   // - order_id: Our standard format
   // - order: Alternative format
   // - product: Product ID (fallback)
-  // - reference: PesaPal reference (our order ID)
-  // - OrderMerchantReference: PesaPal format (our order ID)
-  // - OrderTrackingId: PesaPal tracking ID
+  // - reference: Cryptomus reference (our order ID)
   const orderId = searchParams.get('order_id') || 
                   searchParams.get('order') || 
                   searchParams.get('reference') ||
-                  searchParams.get('product') ||
-                  searchParams.get('OrderMerchantReference');
-  const pesapalTrackingId = searchParams.get('OrderTrackingId');
+                  searchParams.get('product');
+  const cryptomusPaymentId = searchParams.get('payment_id') || searchParams.get('uuid');
   const status = searchParams.get('status');
   
   const [order, setOrder] = useState<Order | null>(null);
@@ -45,7 +42,7 @@ export default function OrderSuccess() {
     console.log('OrderSuccess mounted');
     console.log('User:', user);
     console.log('Order ID from URL:', orderId);
-    console.log('PesaPal Tracking ID:', pesapalTrackingId);
+    console.log('Cryptomus Payment ID:', cryptomusPaymentId);
     console.log('All URL params:', Object.fromEntries(searchParams.entries()));
     
     if (user) {
@@ -168,8 +165,8 @@ export default function OrderSuccess() {
   const fetchOrderDetails = async () => {
     if (!user) return;
     
-    // If we don't have an order ID but have a PesaPal tracking ID, look up by tracking ID
-    if (!orderId && pesapalTrackingId) {
+    // If we don't have an order ID but have a Cryptomus payment ID, look up by payment ID
+    if (!orderId && cryptomusPaymentId) {
       try {
         // First, get the user's profile ID
         const { data: profileData } = await supabase
@@ -191,35 +188,28 @@ export default function OrderSuccess() {
             product:products(*),
             seller:profiles!seller_id(*)
           `)
-          .eq('payment_id', pesapalTrackingId)
+          .eq('payment_id', cryptomusPaymentId)
           .eq('buyer_id', profileData.id)
           .single();
 
         if (orderError || !orderData) {
-          // Try alternative field name
-          const { data: orderData2, error: orderError2 } = await supabase
-            .from('orders')
-            .select(`
-              *,
-              product:products(*),
-              seller:profiles!seller_id(*)
-            `)
-            .eq('pesapal_tracking_id', pesapalTrackingId)
-            .eq('buyer_id', profileData.id)
-            .single();
-
-          if (orderError2 || !orderData2) {
-            setError('Order not found. Please check your email for order details.');
-            setLoading(false);
-            return;
-          }
-
-          setOrder(orderData2 as unknown as Order);
-          setProduct(orderData2.product as Product);
-          setPaymentStatus(orderData2.status);
+          setError('Order not found. Please check your email for order details.');
           setLoading(false);
           return;
         }
+
+        setOrder(orderData as unknown as Order);
+        setProduct(orderData.product as Product);
+        setPaymentStatus(orderData.status);
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error('Error fetching order by payment ID:', error);
+        setError('Failed to load order details');
+        setLoading(false);
+        return;
+      }
+    }
 
         setOrder(orderData as unknown as Order);
         setProduct(orderData.product as Product);
@@ -427,7 +417,7 @@ export default function OrderSuccess() {
       case 'completed':
         return {
           title: 'Payment Confirmed!',
-          description: 'Your PesaPal payment has been confirmed and your download is ready.',
+          description: 'Your cryptocurrency payment has been confirmed and your download is ready.',
           color: 'text-green-600'
         };
       case 'failed':
@@ -637,8 +627,8 @@ export default function OrderSuccess() {
             <Alert className="mb-6">
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Your PesaPal payment is being processed. This typically takes 1-5 minutes 
-                depending on your payment method. This page will automatically update when confirmed.
+                Your cryptocurrency payment is being processed. This typically takes 5-15 minutes 
+                depending on blockchain confirmation. This page will automatically update when confirmed.
               </AlertDescription>
             </Alert>
           )}
@@ -672,9 +662,9 @@ export default function OrderSuccess() {
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-primary" />
                 <div className="text-sm">
-                  <p className="font-medium">Secure PesaPal Payment</p>
+                  <p className="font-medium">Secure Cryptocurrency Payment</p>
                   <p className="text-muted-foreground">
-                    This payment was processed securely through PesaPal with MTN, Airtel, Visa, Bank and International Cards 
+                    This payment was processed securely through Cryptomus with blockchain verification 
                     and automatic revenue splitting.
                   </p>
                 </div>

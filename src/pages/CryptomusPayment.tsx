@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CreditCard, Smartphone, Building2 } from 'lucide-react';
+import { ArrowLeft, Wallet, Shield, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/clients';
+import { SUPPORTED_CURRENCIES } from '@/lib/cryptomus';
 
-export default function PesaPalPayment() {
+export default function CryptomusPayment() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -14,8 +15,6 @@ export default function PesaPalPayment() {
   const [loading, setLoading] = useState(true);
 
   const orderId = searchParams.get('order_id');
-  const productTitle = searchParams.get('product');
-  const amount = searchParams.get('amount');
 
   useEffect(() => {
     if (orderId) {
@@ -46,6 +45,12 @@ export default function PesaPalPayment() {
     }
   };
 
+  const handlePayment = () => {
+    if (orderDetails?.payment_url) {
+      window.location.href = orderDetails.payment_url;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -57,8 +62,8 @@ export default function PesaPalPayment() {
     );
   }
 
-  const displayAmount = orderDetails?.price || amount || '0';
-  const displayTitle = orderDetails?.products?.title || productTitle || 'Digital Product';
+  const displayAmount = orderDetails?.price || '0';
+  const displayTitle = orderDetails?.products?.title || 'Digital Product';
   const sellerName = orderDetails?.profiles?.full_name || orderDetails?.profiles?.username || 'Seller';
 
   return (
@@ -82,7 +87,7 @@ export default function PesaPalPayment() {
           <Card className="h-fit">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <CreditCard className="h-5 w-5 mr-2" />
+                <Wallet className="h-5 w-5 mr-2" />
                 Order Summary
               </CardTitle>
             </CardHeader>
@@ -100,19 +105,19 @@ export default function PesaPalPayment() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Product Price:</span>
-                  <span>UGX {displayAmount}</span>
+                  <span>${displayAmount}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Platform Fee (10%):</span>
-                  <span>UGX {Math.round(parseFloat(displayAmount) * 0.1)}</span>
+                  <span>${(parseFloat(displayAmount) * 0.1).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Seller Earnings (90%):</span>
-                  <span>UGX {Math.round(parseFloat(displayAmount) * 0.9)}</span>
+                  <span>${(parseFloat(displayAmount) * 0.9).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold text-lg">
                   <span>Total:</span>
-                  <span>UGX {displayAmount}</span>
+                  <span>${displayAmount}</span>
                 </div>
               </div>
 
@@ -127,85 +132,36 @@ export default function PesaPalPayment() {
           {/* Payment Methods */}
           <Card>
             <CardHeader>
-              <CardTitle>Choose Payment Method</CardTitle>
-              <p className="text-gray-600">Select your preferred payment option</p>
+              <CardTitle>Cryptocurrency Payment</CardTitle>
+              <p className="text-gray-600">Pay securely with cryptocurrency</p>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Payment Method Options */}
-              <div className="grid grid-cols-1 gap-4">
-                <div className="border rounded-lg p-4 hover:border-green-500 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Smartphone className="h-8 w-8 text-green-600" />
-                    <div>
-                      <h3 className="font-semibold">MTN Mobile Money</h3>
-                      <p className="text-sm text-gray-600">Pay with MTN Mobile Money</p>
-                      <p className="text-xs text-green-600">✓ Instant • ✓ Secure • ✓ Most Popular</p>
-                    </div>
+              {/* Supported Cryptocurrencies */}
+              <div className="grid grid-cols-2 gap-4">
+                {SUPPORTED_CURRENCIES.map((crypto) => (
+                  <div key={crypto.code} className="border rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">💰</div>
+                    <h4 className="font-semibold text-sm">{crypto.code}</h4>
+                    <p className="text-xs text-gray-600">{crypto.network}</p>
                   </div>
-                </div>
-
-                <div className="border rounded-lg p-4 hover:border-purple-500 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Smartphone className="h-8 w-8 text-purple-600" />
-                    <div>
-                      <h3 className="font-semibold">Airtel Money</h3>
-                      <p className="text-sm text-gray-600">Pay with Airtel Money</p>
-                      <p className="text-xs text-purple-600">✓ Instant • ✓ Secure • ✓ Popular</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border rounded-lg p-4 hover:border-blue-500 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <CreditCard className="h-8 w-8 text-blue-600" />
-                    <div>
-                      <h3 className="font-semibold">Visa/Mastercard</h3>
-                      <p className="text-sm text-gray-600">Pay with your debit or credit card</p>
-                      <p className="text-xs text-blue-600">✓ International • ✓ 3D Secure</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border rounded-lg p-4 hover:border-orange-500 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Building2 className="h-8 w-8 text-orange-600" />
-                    <div>
-                      <h3 className="font-semibold">Bank Transfer</h3>
-                      <p className="text-sm text-gray-600">Direct bank account transfer</p>
-                      <p className="text-xs text-orange-600">✓ Low fees • ✓ Secure</p>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* PesaPal Payment Widget */}
+              {/* Cryptomus Payment Button */}
               <div className="border-t pt-6">
-                <h3 className="font-semibold mb-4">Complete Payment with PesaPal</h3>
+                <h3 className="font-semibold mb-4">Complete Payment with Cryptomus</h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600 mb-4">
-                    Click below to proceed to PesaPal's secure payment page where you can choose your preferred payment method.
+                    Click below to proceed to Cryptomus secure payment page where you can pay with your preferred cryptocurrency.
                   </p>
                   
-                  {/* PesaPal Embed */}
-                  <div className="flex justify-center mb-4">
-                    <iframe 
-                      width="300" 
-                      height="60" 
-                      src="https://store.pesapal.com/embed-code?pageUrl=https://store.pesapal.com/seltech" 
-                      frameBorder="0" 
-                      allowFullScreen
-                      className="border rounded-lg shadow-sm"
-                      title="PesaPal Payment"
-                    />
-                  </div>
-
                   <div className="text-center">
                     <Button 
-                      onClick={() => window.open('https://store.pesapal.com/seltech', '_blank')}
-                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
+                      onClick={handlePayment}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 w-full"
                       size="lg"
                     >
-                      Pay with PesaPal
+                      Pay with Cryptocurrency
                     </Button>
                   </div>
                 </div>
@@ -213,12 +169,15 @@ export default function PesaPalPayment() {
 
               {/* Security Notice */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">🔒 Secure Payment</h4>
+                <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Secure Payment
+                </h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Your payment is processed securely by PesaPal</li>
-                  <li>• We never store your payment information</li>
+                  <li>• Your payment is processed securely by Cryptomus</li>
+                  <li>• We never store your wallet information</li>
                   <li>• 256-bit SSL encryption protects your data</li>
-                  <li>• Instant confirmation and receipt</li>
+                  <li>• Instant confirmation after blockchain verification</li>
                 </ul>
               </div>
 
@@ -244,24 +203,24 @@ export default function PesaPalPayment() {
                 <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
                   <span className="text-blue-600 font-bold">1</span>
                 </div>
-                <h4 className="font-semibold mb-2">Choose Method</h4>
-                <p className="text-sm text-gray-600">Select MTN Mobile Money, Airtel Money, Card, or Bank Transfer</p>
+                <h4 className="font-semibold mb-2">Choose Crypto</h4>
+                <p className="text-sm text-gray-600">Select BTC, ETH, USDT, or other supported cryptocurrencies</p>
               </div>
               
               <div className="text-center">
                 <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
                   <span className="text-green-600 font-bold">2</span>
                 </div>
-                <h4 className="font-semibold mb-2">Secure Payment</h4>
-                <p className="text-sm text-gray-600">Complete payment on PesaPal's secure platform</p>
+                <h4 className="font-semibold mb-2">Send Payment</h4>
+                <p className="text-sm text-gray-600">Send crypto to the provided address or scan QR code</p>
               </div>
               
               <div className="text-center">
                 <div className="bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                  <span className="text-orange-600 font-bold">3</span>
+                  <Clock className="h-6 w-6 text-orange-600 mx-auto" />
                 </div>
-                <h4 className="font-semibold mb-2">Instant Confirmation</h4>
-                <p className="text-sm text-gray-600">Receive immediate payment confirmation</p>
+                <h4 className="font-semibold mb-2">Blockchain Confirmation</h4>
+                <p className="text-sm text-gray-600">Wait for blockchain confirmation (usually 5-15 minutes)</p>
               </div>
               
               <div className="text-center">
@@ -269,7 +228,7 @@ export default function PesaPalPayment() {
                   <span className="text-purple-600 font-bold">4</span>
                 </div>
                 <h4 className="font-semibold mb-2">Access Product</h4>
-                <p className="text-sm text-gray-600">Download your digital product immediately</p>
+                <p className="text-sm text-gray-600">Download your digital product immediately after confirmation</p>
               </div>
             </div>
           </CardContent>

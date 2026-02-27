@@ -19,9 +19,9 @@ export default function Terms() {
       icon: CreditCard,
       title: 'Payments & Transactions',
       content: [
-        'All payments are processed securely through PesaPal',
-        'PesaPal payments (MTN, Airtel, Visa, Bank and International Cards) are secure and reliable',
-        'Prices are displayed in USD with KES equivalent for PesaPal',
+        'All payments are processed securely through Cryptomus',
+        'Cryptocurrency payments (BTC, ETH, USDT, USDC, LTC, TRX) are secure and reliable',
+        'Prices are displayed in USD',
         'Platform fee: 10% of each transaction (seller keeps 90%)',
         'Refunds available within 7 days for defective products'
       ]
