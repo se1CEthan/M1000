@@ -102,21 +102,18 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
 
       console.log('📋 Creating Cryptomus invoice:', invoiceData);
 
-      // Call our backend API instead of Cryptomus directly (to avoid CORS)
-      const apiResponse = await fetch(`${baseUrl}/api/create-payment`, {
-        method: 'POST',
+      // Call Supabase Edge Function to create payment
+      const { data: result, error: functionError } = await supabase.functions.invoke('create-cryptomus-payment', {
+        body: invoiceData,
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invoiceData)
+          'Content-Type': 'application/json'
+        }
       });
 
-      if (!apiResponse.ok) {
-        const errorData = await apiResponse.json();
-        throw new Error(errorData.error || 'Failed to create payment');
+      if (functionError) {
+        console.error('❌ Edge function error:', functionError);
+        throw new Error(functionError.message || 'Failed to create payment');
       }
-
-      const result = await apiResponse.json();
 
       console.log('📋 Payment API Result:', result);
 
