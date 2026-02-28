@@ -32,22 +32,17 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
     setError('');
 
     try {
-      // Call backend to create Cryptomus invoice
-      const response = await fetch('/api/payment/create-cryptomus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          productId: product.id,
-          buyerId: user.id,
-          currency: 'USDT' // or allow user to select
-        })
+      // Use UltraFastPayment to create NOWPayments invoice
+      const result = await UltraFastPayment.createPayment({
+        productId: product.id,
+        buyerId: user.id,
+        productPrice: product.price,
+        productTitle: product.title,
+        sellerId: product.seller_id
       });
-      const result = await response.json();
 
-      if (result.success && result.paymentUrl && result.orderId) {
-        setWidgetUrl(result.paymentUrl);
+      if (result.success && result.widgetUrl && result.orderId) {
+        setWidgetUrl(result.widgetUrl);
         setOrderId(result.orderId);
         toast.success(`Ready to pay $${product.price} for ${product.title}`);
       } else {

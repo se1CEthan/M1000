@@ -21,7 +21,9 @@ interface FastPaymentResult {
 }
 
 export class UltraFastPayment {
-  private static widgetBaseUrl = 'https://pay.cryptomus.com/widget/1135f505-133e-474f-b56f-0f56ad44158d';
+  // NOWPayments widget base URL (replace with actual widget if needed)
+  private static widgetBaseUrl = 'https://nowpayments.io/payment/?';
+  private static apiKey = 'ZNGD7SV-MD74WZK-QSSY2K5-6CW1K3D';
   
   /**
    * Create payment with minimal database operations
@@ -30,17 +32,37 @@ export class UltraFastPayment {
     try {
       // Generate order ID immediately (no database call needed yet)
       const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-      
-      // Create widget URL immediately
-      const widgetUrl = this.generateWidgetUrl(orderId, data.productPrice);
-      
+
+      // Create payment via NOWPayments API
+      const paymentResponse = await fetch('https://api.nowpayments.io/v1/invoice', {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          price_amount: data.productPrice,
+          price_currency: 'usd',
+          pay_currency: 'usdt',
+          order_id: orderId,
+          order_description: data.productTitle,
+          success_url: `https://seltech.online/order-success?order=${orderId}`,
+          cancel_url: 'https://seltech.online/marketplace',
+        })
+      });
+      const paymentResult = await paymentResponse.json();
+
+      // Use NOWPayments invoice URL for widget
+      const widgetUrl = paymentResult.invoice_url || '';
+
       // Create order in background (non-blocking)
       this.createOrderAsync(data, orderId).catch(console.error);
-      
+
       return {
-        success: true,
+        success: !!widgetUrl,
         orderId,
-        widgetUrl
+        widgetUrl,
+        error: widgetUrl ? undefined : paymentResult.message || 'Failed to create payment'
       };
     } catch (error) {
       return {
@@ -50,24 +72,8 @@ export class UltraFastPayment {
     }
   }
   
-  /**
-   * Generate widget URL instantly
-   */
-  private static generateWidgetUrl(orderId: string, amount: number): string {
-    const params = new URLSearchParams({
-      order_id: orderId,
-      amount: amount.toString(),
-      currency: 'USD',
-      to_currency: 'USDT',
-      url_success: `https://seltech.online/order-success?order=${orderId}`,
-      url_return: 'https://seltech.online/marketplace',
-      url_callback: 'https://rtsaarapvlzzinmpjdys.supabase.co/functions/v1/cryptomus-webhook',
-      is_payment_multiple: 'false',
-      lifetime: '3600'
-    });
-    
-    return `${this.widgetBaseUrl}?${params.toString()}`;
-  }
+  // Widget URL is now provided by NOWPayments API response
+  // No need for generateWidgetUrl
   
   /**
    * Create order asynchronously (non-blocking)
