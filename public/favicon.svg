@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="128" fill="rgba(20, 184, 166, 1)"/>
-  <g transform="translate(256, 256) rotate(0) translate(-256, -256)">
-    <g transform="translate(98.304, 98.304)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="315.392" height="315.392" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 1)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot-message-square" aria-hidden="true"><path d="M12 6V2H8"></path><path d="M15 11v2"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M20 16a2 2 0 0 1-2 2H8.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 4 20.286V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"></path><path d="M9 11v2"></path></svg>
-    </g>
-  </g>
-</svg>
