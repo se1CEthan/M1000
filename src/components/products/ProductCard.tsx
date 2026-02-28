@@ -161,7 +161,7 @@ export function ProductCard({ product, onWishlist, isWishlisted }: ProductCardPr
           </div>
         </div>
 
-        {/* Price & Seller */}
+        {/* Price, Seller & Buy Button */}
         <div className="flex items-center justify-between">
           <div>
             <span className="text-lg font-bold text-primary">
@@ -173,28 +173,35 @@ export function ProductCard({ product, onWishlist, isWishlisted }: ProductCardPr
               </span>
             )}
           </div>
-          {product.seller && (
-            <Link
-              to={`/seller/${product.seller.id}`}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="h-6 w-6 rounded-full bg-muted overflow-hidden">
-                {product.seller.avatar_url ? (
-                  <img
-                    src={product.seller.avatar_url}
-                    alt={product.seller.full_name || 'Seller'}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-primary text-xs text-primary-foreground">
-                    {product.seller.full_name?.charAt(0) || 'S'}
-                  </div>
-                )}
-              </div>
-              <span className="max-w-[80px] truncate">{product.seller.full_name || 'Seller'}</span>
+          <div className="flex items-center gap-2">
+            {product.seller && (
+              <Link
+                to={`/seller/${product.seller.id}`}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="h-6 w-6 rounded-full bg-muted overflow-hidden">
+                  {product.seller.avatar_url ? (
+                    <img
+                      src={product.seller.avatar_url}
+                      alt={product.seller.full_name || 'Seller'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-primary text-xs text-primary-foreground">
+                      {product.seller.full_name?.charAt(0) || 'S'}
+                    </div>
+                  )}
+                </div>
+                <span className="max-w-[80px] truncate">{product.seller.full_name || 'Seller'}</span>
+              </Link>
+            )}
+            <Link to={`/pay/${product.slug}`} className="ml-2">
+              <Button size="sm" variant="primary">
+                Buy
+              </Button>
             </Link>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>
