@@ -134,12 +134,11 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
               {loading ? '...' : stats.totalProducts}
             </div>
             <p className="text-xs text-muted-foreground">
-              Setup your crypto wallet to receive payouts.<br />
               {stats.approvedProducts} approved
             </p>
           </CardContent>
         </Card>
-      {/* End of Products Card */}
+      </div>
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
