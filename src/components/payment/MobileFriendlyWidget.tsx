@@ -193,7 +193,7 @@ export function MobileFriendlyWidget({ isOpen, onClose, product, onSuccess }: Mo
                   </div>
                   <h3 className="text-lg font-semibold">Mobile Payment</h3>
                   <p className="text-sm text-muted-foreground">
-                    Complete your payment securely on Cryptomus
+                    Complete your payment securely with Crypto (NOWPayments)
                   </p>
                 </div>
 
@@ -217,14 +217,13 @@ export function MobileFriendlyWidget({ isOpen, onClose, product, onSuccess }: Mo
                 <div className="space-y-3">
                   <Button 
                     onClick={() => {
-                      console.log('Mobile payment button clicked:', { widgetUrl, isMobile });
                       handleMobilePayment();
                     }}
                     className="w-full h-12 text-base font-medium"
                     size="lg"
                   >
                     <ExternalLink className="h-5 w-5 mr-2" />
-                    Pay ${product.price} on Cryptomus
+                    Pay ${product.price} with Crypto
                   </Button>
                   
                   {/* Backup copy link button */}
