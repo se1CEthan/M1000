@@ -133,12 +133,13 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
             <div className="text-2xl font-bold text-purple-600">
               {loading ? '...' : stats.totalProducts}
             </div>
-                    Setup your crypto wallet to receive payouts.
+            <p className="text-xs text-muted-foreground">
+              Setup your crypto wallet to receive payouts.<br />
               {stats.approvedProducts} approved
             </p>
           </CardContent>
         </Card>
-      </div>
+      {/* End of Products Card */}
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -157,7 +158,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Downloads</CardTitle>
             <Download className="h-4 w-4 text-green-500" />
-                    Setup your crypto wallet for payout.
+          </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? '...' : stats.totalDownloads.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Successful purchases</p>
@@ -184,7 +185,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
             <div className="text-2xl font-bold">{loading ? '...' : stats.avgRating.toFixed(1)}</div>
             <p className="text-xs text-muted-foreground">Customer satisfaction</p>
           </CardContent>
-                  {stats.hasWallet ? 'Auto-payout enabled' : 'Setup your crypto wallet for payout'}
+        </Card>
       </div>
 
       {/* Recent Activity */}
@@ -253,9 +254,9 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
                           <Package className="h-6 w-6 text-muted-foreground m-2" />
                         )}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <div className="font-medium text-sm">{product.title}</div>
-                        <div className="text-xs text-muted-foreground">UGX {(product.price * 3700).toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">UGX {(product.price * 3700)?.toLocaleString()}</div>
                       </div>
                     </div>
                     <div className="text-right">

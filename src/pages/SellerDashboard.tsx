@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { DataTable, TableColumn } from '@/components/shared/DataTable';
 import { ProductUploadForm } from '@/components/seller/ProductUploadForm';
-import { MobileMoneyPayoutSetup } from '@/components/seller/MobileMoneyPayoutSetup';
+import { CryptoWalletSetup } from '@/components/seller/CryptoWalletSetup';
 import { LiveEarningsDashboard } from '@/components/seller/LiveEarningsDashboard';
 import { StorageManagement } from '@/components/seller/StorageManagement';
 import { PayoutNotifications } from '@/components/notifications/PayoutNotifications';
@@ -319,7 +319,7 @@ export default function SellerDashboard() {
           </TabsTrigger>
           <TabsTrigger value="payout" className="flex items-center gap-2">
             <Wallet className="h-4 w-4" />
-            Mobile Payout
+            Crypto Wallet
             {!stats.hasWallet && <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>}
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center gap-2">
@@ -366,7 +366,7 @@ export default function SellerDashboard() {
         </TabsContent>
 
         <TabsContent value="payout">
-          <MobileMoneyPayoutSetup />
+          <CryptoWalletSetup />
         </TabsContent>
 
         <TabsContent value="products">
