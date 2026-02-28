@@ -260,7 +260,7 @@ async function processSellerpayout(orderId: string): Promise<void> {
       return;
     }
 
-    // Create payout record
+    // Create payout record in DB (status: pending)
     const { data: payout, error: payoutError } = await supabase
       .from('payouts')
       .insert({
@@ -279,9 +279,38 @@ async function processSellerpayout(orderId: string): Promise<void> {
       return;
     }
 
-    // Create Cryptomus payout (if you want automatic payouts)
-    // This is optional - you might want to process payouts manually for security
-    console.log(`Payout created for seller ${order.seller.user_id}: $${order.seller_earnings}`);
+    // Call Cryptomus payout API to send 90% to seller
+    try {
+      const { createPayout } = await import('@/lib/cryptomus');
+      const payoutResult = await createPayout({
+        amount: order.seller_earnings.toString(),
+        currency: order.crypto_currency || 'USDT',
+        network: 'TRC20', // or dynamically set based on seller config
+        address: order.seller.wallet_address,
+        order_id: orderId.toString(),
+        // Optionally: url_callback
+      });
+      if (payoutResult.state === 0 && payoutResult.result && payoutResult.result.status === 'paid') {
+        // Update payout record to completed
+        await supabase
+          .from('payouts')
+          .update({ status: 'completed', txid: payoutResult.result.txid })
+          .eq('id', payout.id);
+        console.log(`Payout sent to seller ${order.seller.user_id}: $${order.seller_earnings}`);
+      } else {
+        await supabase
+          .from('payouts')
+          .update({ status: 'failed', error_message: JSON.stringify(payoutResult) })
+          .eq('id', payout.id);
+        console.error('Cryptomus payout failed:', payoutResult);
+      }
+    } catch (err) {
+      await supabase
+        .from('payouts')
+        .update({ status: 'failed', error_message: err instanceof Error ? err.message : String(err) })
+        .eq('id', payout.id);
+      console.error('Cryptomus payout exception:', err);
+    }
 
   } catch (error) {
     console.error('Seller payout processing error:', error);
