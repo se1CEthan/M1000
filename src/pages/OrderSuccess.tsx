@@ -627,9 +627,9 @@ export default function OrderSuccess() {
             <Alert className="mb-6">
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                ⏳ Waiting for Cryptomus webhook confirmation. Your cryptocurrency payment is being processed. 
+                ⏳ Waiting for Cryptomus payment confirmation. Your cryptocurrency payment is being processed. 
                 This typically takes 5-15 minutes depending on blockchain confirmation. 
-                This page will automatically check the backend every 5 seconds and unlock your download when payment is confirmed.
+                This page will automatically check the payment status every 5 seconds and unlock your download when payment is confirmed.
               </AlertDescription>
             </Alert>
           )}
