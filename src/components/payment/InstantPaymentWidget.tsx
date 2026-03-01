@@ -25,6 +25,8 @@ interface InstantPaymentWidgetProps {
  */
 export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymentWidgetProps) {
   const { user } = useAuth();
+  // Use environment variable for webhook URL
+  const webhookUrl = import.meta.env.VITE_CRYPTOMUS_WEBHOOK_URL;
 
   useEffect(() => {
     if (isOpen && user && product) {
