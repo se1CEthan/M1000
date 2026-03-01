@@ -45,11 +45,6 @@ export function CryptomusWidgetOnly({ isOpen, onClose, product, onSuccess }: Cry
       throw new Error('Please log in to make a purchase');
     }
 
-    // Validate product price
-    if (typeof product.price !== 'number' || isNaN(product.price) || product.price <= 0) {
-      throw new Error('Invalid product price. Please contact support.');
-    }
-
     // Check if user already owns this product
     const { data: existingOrder } = await supabase
       .from('orders')

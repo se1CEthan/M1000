@@ -14,7 +14,7 @@ export default function About() {
     {
       icon: Shield,
       title: 'Secure Payments',
-      description: 'Cryptocurrency payments (BTC, ETH, USDT, USDC) for maximum security and convenience.'
+      description: 'PesaPal payments (MTN, Airtel, Visa, Bank and International Cards) for maximum security and convenience.'
     },
     {
       icon: Users,
@@ -55,7 +55,7 @@ export default function About() {
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             The premier digital marketplace for developers, creators, and tech enthusiasts. 
-            Buy and sell bots, software, templates, and digital assets with cryptocurrency payments (BTC, ETH, USDT).
+            Buy and sell bots, software, templates, and digital assets with PesaPal payments (MTN, Airtel, Visa, Bank and International Cards).
           </p>
         </div>
 
@@ -116,7 +116,7 @@ export default function About() {
               <p className="text-muted-foreground leading-relaxed mb-6">
                 We noticed that existing platforms often took large commissions, had complex payout 
                 systems, or lacked the technical focus that developers needed. That's why we built 
-                Seltech with cryptocurrency payments, fair revenue sharing, and a developer-first approach.
+                Seltech with PesaPal payments (MTN, Airtel, Visa, Bank and International Cards), fair revenue sharing, and a developer-first approach.
               </p>
               <p className="text-muted-foreground leading-relaxed">
                 Today, Seltech serves thousands of developers worldwide, facilitating secure transactions 
@@ -143,7 +143,7 @@ export default function About() {
               <CardContent className="p-6 text-center">
                 <h3 className="text-xl font-semibold mb-3">Innovation</h3>
                 <p className="text-muted-foreground">
-                  Embracing new technologies like cryptocurrency payments to improve the user experience.
+                  Embracing new technologies like PesaPal payments (MTN, Airtel, Visa, Bank and International Cards) to improve the user experience.
                 </p>
               </CardContent>
             </Card>

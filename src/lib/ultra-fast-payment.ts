@@ -21,8 +21,7 @@ interface FastPaymentResult {
 }
 
 export class UltraFastPayment {
-  // Cryptomus widget base URL (replace with actual widget if needed)
-  private static widgetBaseUrl = 'https://pay.cryptomus.com/paywidget?';
+  private static widgetBaseUrl = 'https://pay.cryptomus.com/widget/1135f505-133e-474f-b56f-0f56ad44158d';
   
   /**
    * Create payment with minimal database operations
@@ -31,33 +30,17 @@ export class UltraFastPayment {
     try {
       // Generate order ID immediately (no database call needed yet)
       const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-
-      // Create payment via Cryptomus API (replace with your actual endpoint)
-      const paymentResponse = await fetch('/api/cryptomus/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: data.productId,
-          buyerId: data.buyerId,
-          productPrice: data.productPrice,
-          productTitle: data.productTitle,
-          sellerId: data.sellerId,
-          orderId
-        })
-      });
-      const paymentResult = await paymentResponse.json();
-
-      // Use Cryptomus widget URL for widget
-      const widgetUrl = paymentResult.widgetUrl || '';
-
+      
+      // Create widget URL immediately
+      const widgetUrl = this.generateWidgetUrl(orderId, data.productPrice);
+      
       // Create order in background (non-blocking)
       this.createOrderAsync(data, orderId).catch(console.error);
-
+      
       return {
-        success: !!widgetUrl,
+        success: true,
         orderId,
-        widgetUrl,
-        error: widgetUrl ? undefined : paymentResult.message || 'Failed to create payment'
+        widgetUrl
       };
     } catch (error) {
       return {
@@ -67,8 +50,24 @@ export class UltraFastPayment {
     }
   }
   
-  // Widget URL is now provided by Cryptomus API response
-  // No need for generateWidgetUrl
+  /**
+   * Generate widget URL instantly
+   */
+  private static generateWidgetUrl(orderId: string, amount: number): string {
+    const params = new URLSearchParams({
+      order_id: orderId,
+      amount: amount.toString(),
+      currency: 'USD',
+      to_currency: 'USDT',
+      url_success: `https://seltech.online/order-success?order=${orderId}`,
+      url_return: 'https://seltech.online/marketplace',
+      url_callback: 'https://rtsaarapvlzzinmpjdys.supabase.co/functions/v1/cryptomus-webhook',
+      is_payment_multiple: 'false',
+      lifetime: '3600'
+    });
+    
+    return `${this.widgetBaseUrl}?${params.toString()}`;
+  }
   
   /**
    * Create order asynchronously (non-blocking)

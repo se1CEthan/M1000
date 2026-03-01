@@ -12,22 +12,11 @@ import { supabase } from '@/integrations/supabase/clients';
 import { Order, Product } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { error } from 'console';
 
 export default function OrderSuccess() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  
-  // Handle multiple parameter formats:
-  // - order_id: Our standard format
-  // - order: Alternative format
-  // - product: Product ID (fallback)
-  // - reference: Cryptomus reference (our order ID)
-  const orderId = searchParams.get('order_id') || 
-                  searchParams.get('order') || 
-                  searchParams.get('reference') ||
-                  searchParams.get('product');
-  const cryptomusPaymentId = searchParams.get('payment_id') || searchParams.get('uuid');
+  const orderId = searchParams.get('order') || searchParams.get('order_id');
   const status = searchParams.get('status');
   
   const [order, setOrder] = useState<Order | null>(null);
@@ -39,37 +28,22 @@ export default function OrderSuccess() {
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
   useEffect(() => {
-    console.log('🎯 STEP 6: User returned to success page');
-    console.log('User:', user);
-    console.log('Order ID from URL:', orderId);
-    console.log('Cryptomus Payment ID:', cryptomusPaymentId);
-    console.log('All URL params:', Object.fromEntries(searchParams.entries()));
-    
     if (user) {
       // If we have an order ID, fetch that specific order
       if (orderId) {
-        console.log('📋 Fetching order details for:', orderId);
         fetchOrderDetails();
       } else {
         // If no order ID, get the most recent pending/completed order for this user
-        console.log('📋 No order ID, fetching latest order');
         fetchLatestOrder();
       }
       
-      // STEP 7: Poll backend every 5 seconds to check if order is paid
-      console.log('⏰ STEP 7: Starting payment status polling...');
+      // Poll payment status every 10 seconds for pending payments
       const interval = setInterval(() => {
         if (paymentStatus === 'pending' || paymentStatus === '') {
-          console.log('🔄 Checking backend for payment confirmation...');
           checkPaymentStatus();
         }
-      }, 5000); // Check every 5 seconds
-      
+      }, 10000);
       return () => clearInterval(interval);
-    } else {
-      console.log('❌ No user logged in');
-      setError('Please log in to view your order');
-      setLoading(false);
     }
   }, [orderId, user, paymentStatus]);
 
@@ -77,25 +51,10 @@ export default function OrderSuccess() {
     if (!user) return;
 
     try {
-      // Get user's profile ID first
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profileData) {
-        setError('User profile not found');
-        setLoading(false);
-        return;
-      }
-
       // First check localStorage for pending order info
       const pendingOrderStr = localStorage.getItem('pendingOrder');
       if (pendingOrderStr) {
         const pendingOrder = JSON.parse(pendingOrderStr);
-        console.log('Found pending order in localStorage:', pendingOrder);
-        
         // Check if it's recent (within last 2 hours)
         if (Date.now() - pendingOrder.timestamp < 2 * 60 * 60 * 1000) {
           // Try to fetch this specific order
@@ -107,11 +66,10 @@ export default function OrderSuccess() {
               seller:profiles!seller_id(*)
             `)
             .eq('id', pendingOrder.orderId)
-            .eq('buyer_id', profileData.id)
+            .eq('buyer_id', user.id)
             .single();
 
           if (!orderError && orderData) {
-            console.log('Order found from localStorage:', orderData);
             setOrder(orderData as unknown as Order);
             setProduct(orderData.product as Product);
             setPaymentStatus(orderData.status);
@@ -130,7 +88,6 @@ export default function OrderSuccess() {
       }
 
       // Fallback: Get the most recent order for this user (within last hour)
-      console.log('Fetching most recent order for profile:', profileData.id);
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       
       const { data: orderData, error: orderError } = await supabase
@@ -140,20 +97,18 @@ export default function OrderSuccess() {
           product:products(*),
           seller:profiles!seller_id(*)
         `)
-        .eq('buyer_id', profileData.id)
+        .eq('buyer_id', user.id)
         .gte('created_at', oneHourAgo)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       if (orderError || !orderData) {
-        console.error('No recent order found:', orderError);
         setError('No recent order found. Please check your order history.');
         setLoading(false);
         return;
       }
 
-      console.log('Found recent order:', orderData);
       setOrder(orderData as unknown as Order);
       setProduct(orderData.product as Product);
       setPaymentStatus(orderData.status);
@@ -166,85 +121,9 @@ export default function OrderSuccess() {
   };
 
   const fetchOrderDetails = async () => {
-    if (!user) return;
-    
-    // If we don't have an order ID but have a Cryptomus payment ID, look up by payment ID
-    if (!orderId && cryptomusPaymentId) {
-      try {
-        // First, get the user's profile ID
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (!profileData) {
-          setError('User profile not found');
-          setLoading(false);
-          return;
-        }
-
-        const { data: orderData, error: orderError } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            product:products(*),
-            seller:profiles!seller_id(*)
-          `)
-          .eq('payment_id', cryptomusPaymentId)
-          .eq('buyer_id', profileData.id)
-          .single();
-
-        if (orderError || !orderData) {
-          setError('Order not found. Please check your email for order details.');
-          setLoading(false);
-          return;
-        }
-
-        setOrder(orderData as unknown as Order);
-        setProduct(orderData.product as Product);
-        setPaymentStatus(orderData.status);
-        setLoading(false);
-        return;
-      } catch (error) {
-        console.error('Error fetching order by payment ID:', error);
-        setError('Failed to load order details');
-        setLoading(false);
-        return;
-      }
-    }
-
-    if (!orderId) {
-      console.log('No order ID provided');
-      return;
-    }
+    if (!orderId || !user) return;
 
     try {
-      console.log('Fetching profile for user:', user.id);
-      // First, get the user's profile ID
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        setError('User profile not found. Please contact support.');
-        setLoading(false);
-        return;
-      }
-
-      if (!profileData) {
-        console.error('No profile data returned');
-        setError('User profile not found');
-        setLoading(false);
-        return;
-      }
-
-      console.log('Profile found:', profileData.id);
-      console.log('Looking up order:', orderId, 'for buyer:', profileData.id);
-
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
@@ -253,101 +132,59 @@ export default function OrderSuccess() {
           seller:profiles!seller_id(*)
         `)
         .eq('id', orderId)
-        .eq('buyer_id', profileData.id)
+        .eq('buyer_id', user.id)
         .single();
 
-      if (orderError) {
-        console.error('Order fetch error:', orderError);
-        
-        // Try without buyer_id check (maybe it's someone else's order or admin viewing)
-        console.log('Trying to fetch order without buyer_id check...');
-        const { data: orderData2, error: orderError2 } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            product:products(*),
-            seller:profiles!seller_id(*)
-          `)
-          .eq('id', orderId)
-          .single();
-
-        if (orderError2 || !orderData2) {
-          console.error('Order not found even without buyer check:', orderError2);
-          setError(`Order not found. Order ID: ${orderId}. Please check your email or contact support.`);
-          setLoading(false);
-          return;
-        }
-
-        console.log('Order found (without buyer check):', orderData2);
-        setOrder(orderData2 as unknown as Order);
-        setProduct(orderData2.product as Product);
-        setPaymentStatus(orderData2.status);
-        setLoading(false);
-        return;
-      }
-
-      if (!orderData) {
-        console.error('No order data returned');
+      if (orderError || !orderData) {
         setError('Order not found or access denied');
         setLoading(false);
         return;
       }
 
-      console.log('Order found:', orderData);
       setOrder(orderData as unknown as Order);
       setProduct(orderData.product as Product);
       setPaymentStatus(orderData.status);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching order:', error);
-      setError('Failed to load order details: ' + (error as Error).message);
+      setError('Failed to load order details');
       setLoading(false);
     }
   };
 
   const checkPaymentStatus = async (silent = false) => {
-    if (!orderId) return;
+    if (!order?.payment_id || paymentStatus === 'paid' || paymentStatus === 'completed') return;
 
     if (!silent) setRefreshing(true);
 
     try {
-      console.log('🔍 STEP 7: Checking backend if order is paid...');
+      const result = await checkProductionPaymentStatus(order.payment_id);
       
-      // Query the database to check if order status changed to 'paid'
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('status, payment_status, download_url, download_expires_at')
-        .eq('id', orderId)
-        .single();
-
-      if (orderError) {
-        console.error('❌ Error checking order status:', orderError);
-        return;
-      }
-
-      console.log('📊 Order status from backend:', orderData);
-
-      // STEP 8: If order is PAID, unlock download
-      if (orderData.status === 'paid' || orderData.payment_status === 'completed') {
-        console.log('✅ STEP 8: Order is PAID - unlocking download!');
+      if (result.isPaid) {
         setPaymentStatus('paid');
+        setPaymentDetails(result);
         
-        // Refresh full order details to get download URL
+        // Update order status in database
+        await supabase
+          .from('orders')
+          .update({ 
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', orderId);
+        
+        // Refresh order details to get download URL
         await fetchOrderDetails();
         
         toast.success('Payment confirmed! Your download is ready.');
-        
-        // Clear pending order from localStorage
-        localStorage.removeItem('pendingOrder');
-      } else if (orderData.status === 'failed') {
-        console.log('❌ Payment failed');
-        setPaymentStatus('failed');
       } else {
-        console.log('⏳ Payment still pending...');
-        setPaymentStatus('pending');
+        setPaymentDetails(result);
+        if (result.status === 'failed' || result.status === 'cancelled') {
+          setPaymentStatus('failed');
+        }
       }
     } catch (error) {
-      console.error('❌ Error checking payment status:', error);
+      console.error('Error checking payment status:', error);
     } finally {
       if (!silent) setRefreshing(false);
     }
@@ -417,7 +254,7 @@ export default function OrderSuccess() {
       case 'completed':
         return {
           title: 'Payment Confirmed!',
-          description: 'Your cryptocurrency payment has been confirmed and your download is ready.',
+          description: 'Your PesaPal payment has been confirmed and your download is ready.',
           color: 'text-green-600'
         };
       case 'failed':
@@ -592,7 +429,7 @@ export default function OrderSuccess() {
             </CardContent>
           </Card>
 
-          {/* STEP 8: Download Section - Only shown when order is PAID */}
+          {/* Download Section */}
           {(paymentStatus === 'paid' || paymentStatus === 'completed') && order.download_url && (
             <Card className="mb-6 border-green-200 bg-green-50 dark:bg-green-900/20">
               <CardContent className="p-6">
@@ -600,10 +437,10 @@ export default function OrderSuccess() {
                   <Download className="h-10 w-10 text-green-600" />
                   <div className="flex-1">
                     <h3 className="font-semibold text-green-800 dark:text-green-200 text-lg">
-                      ✅ Payment Confirmed - Download Unlocked!
+                      Your Download is Ready!
                     </h3>
                     <p className="text-sm text-green-600 dark:text-green-300">
-                      Your payment has been confirmed by Cryptomus. Download expires on {order.download_expires_at ? 
+                      Download expires on {order.download_expires_at ? 
                         new Date(order.download_expires_at).toLocaleDateString() : 
                         'Never'
                       }
@@ -627,9 +464,8 @@ export default function OrderSuccess() {
             <Alert className="mb-6">
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                ⏳ Waiting for Cryptomus payment confirmation. Your cryptocurrency payment is being processed. 
-                This typically takes 5-15 minutes depending on blockchain confirmation. 
-                This page will automatically check the payment status every 5 seconds and unlock your download when payment is confirmed.
+                Your PesaPal payment is being processed. This typically takes 1-5 minutes 
+                depending on your payment method. This page will automatically update when confirmed.
               </AlertDescription>
             </Alert>
           )}
@@ -663,9 +499,9 @@ export default function OrderSuccess() {
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-primary" />
                 <div className="text-sm">
-                  <p className="font-medium">Secure Cryptocurrency Payment</p>
+                  <p className="font-medium">Secure PesaPal Payment</p>
                   <p className="text-muted-foreground">
-                    This payment was processed securely through Cryptomus with blockchain verification 
+                    This payment was processed securely through PesaPal with MTN, Airtel, Visa, Bank and International Cards 
                     and automatic revenue splitting.
                   </p>
                 </div>

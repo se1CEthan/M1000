@@ -53,11 +53,11 @@ export function useSellerStats() {
         supabase
           .from('products')
           .select('*')
-          .eq('seller_id', profile.id), // Use profile.id instead of profile.user_id
+          .eq('seller_id', profile.id),
         supabase
           .from('orders')
           .select('*')
-          .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
+          .eq('seller_id', profile.id)
           .order('created_at', { ascending: false })
       ]);
 
@@ -73,7 +73,7 @@ export function useSellerStats() {
         const payoutsResult = await supabase
           .from('payouts')
           .select('*')
-          .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
+          .eq('seller_id', profile.id)
           .eq('status', 'completed');
         
         if (!payoutsResult.error) {
@@ -149,7 +149,7 @@ export function useSellerStats() {
         conversionRate: totalViews > 0 ? (totalDownloads / totalViews) * 100 : 0,
         avgRating,
         monthlyGrowth: 12, // Could be calculated from historical data
-        hasWallet: !!profile.mobile_money_number,
+        hasWallet: !!profile.wallet_address,
         pendingBalance,
         recentOrders: recentOrdersWithProducts,
         topProducts
@@ -177,7 +177,7 @@ export function useSellerStats() {
           event: '*', 
           schema: 'public', 
           table: 'orders',
-          filter: `seller_id=eq.${profile?.id}` // Use profile.id instead of profile.user_id
+          filter: `seller_id=eq.${profile?.id}`
         }, 
         () => {
           fetchStats();
@@ -192,7 +192,7 @@ export function useSellerStats() {
           event: '*', 
           schema: 'public', 
           table: 'products',
-          filter: `seller_id=eq.${profile?.id}` // Use profile.id instead of profile.user_id
+          filter: `seller_id=eq.${profile?.id}`
         }, 
         () => {
           fetchStats();

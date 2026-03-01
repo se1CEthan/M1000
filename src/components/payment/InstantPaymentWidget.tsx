@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Product } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/clients';
+import { createPesaPalPayment } from '@/lib/pesapal-payment';
 import { toast } from 'sonner';
 
 interface InstantPaymentWidgetProps {
@@ -10,32 +10,18 @@ interface InstantPaymentWidgetProps {
   product: Product;
 }
 
-/**
- * Cryptomus Payment Widget
- * 
- * Flow:
- * 1️⃣ User clicks Buy
- * 2️⃣ Create order in database (status: pending)
- * 3️⃣ Redirect user to Cryptomus payment page
- * 4️⃣ Cryptomus sends webhook when payment confirmed
- * 5️⃣ Backend marks order as PAID
- * 6️⃣ User returns to success page
- * 7️⃣ Success page checks if order is paid
- * 8️⃣ THEN unlock download
- */
 export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymentWidgetProps) {
   const { user } = useAuth();
-  // Use environment variable for webhook URL
-  const webhookUrl = import.meta.env.VITE_CRYPTOMUS_WEBHOOK_URL;
 
   useEffect(() => {
     if (isOpen && user && product) {
-      handleCryptomusPayment();
+      // Use PesaPal payment processing
+      handlePesaPalPayment();
     }
   }, [isOpen, user, product]);
 
-  const handleCryptomusPayment = async () => {
-    console.log('🚀 Starting Cryptomus payment flow...');
+  const handlePesaPalPayment = async () => {
+    console.log('🚀 Starting PesaPal payment creation...');
     console.log('👤 User:', user?.id, user?.email);
     console.log('📦 Product:', product?.id, product?.title, product?.price);
 
@@ -54,150 +40,91 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
     }
 
     try {
-      // STEP 2: Create order in YOUR database
-      console.log('📝 Step 2: Creating order in database...');
+      console.log('📡 Calling createPesaPalPayment API...');
       
-      // Validate product price
-      if (!product.price || product.price <= 0) {
-        throw new Error('Invalid product price');
-      }
+      // Convert USD to UGX (approximate rate: 1 USD = 3700 UGX)
+      const ugxAmount = Math.round(product.price * 3700);
       
-      // Calculate revenue split (90% seller, 10% platform)
-      const price = Number(product.price);
-      const sellerEarnings = price * 0.9;
-      const platformFee = price * 0.1;
-      
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          product_id: product.id,
-          seller_id: product.seller_id,
-          buyer_id: user.id,
-          price: price,
-          platform_fee: platformFee,
-          seller_earnings: sellerEarnings,
-          currency: 'USD',
-          status: 'pending',
-          payment_status: 'pending',
-          payment_method: 'cryptomus',
-          order_number: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        })
-        .select()
-        .single();
-
-      if (orderError || !order) {
-        throw new Error('Failed to create order: ' + (orderError?.message || 'Unknown error'));
-      }
-
-      console.log('✅ Order created in database:', order.id, order.order_number);
-
-      // STEP 3: Create Cryptomus payment and redirect
-      console.log('💳 Step 3: Creating Cryptomus payment invoice...');
-      
-      const baseUrl = window.location.origin;
-      
-      // Success/Return URLs - where user returns after payment
-      const successUrl = `${baseUrl}/order-success?order_id=${order.id}`;
-      const returnUrl = `${baseUrl}/order-success?order_id=${order.id}`;
-      
-      console.log('🔗 Payment URLs:', {
-        success: successUrl,
-        return: returnUrl
+      const result = await createPesaPalPayment({
+        productId: product.id,
+        sellerId: product.seller_id,
+        buyerId: user.id,
+        amount: ugxAmount,
+        currency: 'UGX',
+        productTitle: product.title,
+        buyerEmail: user.email
       });
 
-      const invoiceData = {
-        amount: product.price,
-        currency: 'USD',
-        order_id: order.id,
-        url_return: returnUrl,
-        url_success: successUrl,
-        url_callback: webhookUrl,
-      };
+      console.log('📋 PesaPal Result:', result);
 
-      console.log('📋 Invoice data:', invoiceData);
-
-      // Call Supabase Edge Function to create Cryptomus payment
-      const { data: result, error: functionError } = await supabase.functions.invoke(
-        'create-cryptomus-payment',
-        {
-          body: invoiceData,
-        }
-      );
-
-      if (functionError) {
-        console.error('❌ Edge function error:', functionError);
-        throw new Error(functionError.message || 'Failed to create payment');
-      }
-
-      console.log('📨 Cryptomus response:', result);
-
-      if (result.success && result.payment_url) {
-        console.log('✅ Payment invoice created successfully');
-        console.log('🔗 Payment URL:', result.payment_url);
-        console.log('💳 Payment ID:', result.payment_id);
-
-        // Update order with payment details
-        await supabase
-          .from('orders')
-          .update({
-            cryptomus_payment_id: result.payment_id,
-            payment_url: result.payment_url,
-          })
-          .eq('id', order.id);
+      if (result.success && result.paymentUrl && result.orderId) {
+        console.log('✅ PesaPal payment created successfully');
+        console.log('🔗 Payment URL:', result.paymentUrl);
+        console.log('📄 Order ID:', result.orderId);
 
         // Store order info for success page
         localStorage.setItem('pendingOrder', JSON.stringify({
-          orderId: order.id,
-          orderNumber: order.order_number,
+          orderId: result.orderId,
+          orderNumber: result.orderId,
           productTitle: product.title,
-          amount: product.price,
-          currency: 'USD',
-          paymentId: result.payment_id,
-          paymentUrl: result.payment_url,
+          amount: ugxAmount,
+          currency: 'UGX',
+          trackingId: result.trackingId,
           timestamp: Date.now()
         }));
 
-        // Close modal
+        // Close modal immediately
         onClose();
 
-        // Show redirect message
-        toast.success('Redirecting to Cryptomus payment...', {
-          description: 'Pay with cryptocurrency (BTC, ETH, USDT, etc.)',
-          duration: 2000
+        // Show payment method selection toast
+        toast.success('Redirecting to PesaPal payment page...', {
+          description: 'Choose M-Pesa, Airtel Money, or Card payment'
         });
 
-        // STEP 3: Redirect to Cryptomus payment page
-        console.log('🚀 Redirecting to Cryptomus payment page...');
-        setTimeout(() => {
-          window.location.href = result.payment_url;
-        }, 1000);
+        // Redirect to PesaPal payment page
+        const paymentUrl = `/pesapal-payment?order_id=${result.orderId}&product=${encodeURIComponent(product.title)}&amount=${ugxAmount}`;
+        
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          console.log('📱 Mobile redirect to:', paymentUrl);
+          // Mobile: Direct redirect for better mobile money integration
+          window.location.href = paymentUrl;
+        } else {
+          console.log('💻 Desktop redirect to:', paymentUrl);
+          // Desktop: Navigate to payment page
+          window.location.href = paymentUrl;
+        }
 
       } else {
-        console.error('❌ Failed to create payment invoice:', result);
-        
-        // Update order status to failed
-        await supabase
-          .from('orders')
-          .update({ 
-            status: 'failed',
-            payment_status: 'failed',
-          })
-          .eq('id', order.id);
-        
-        throw new Error(result.error || 'Failed to create payment invoice');
+        console.log('❌ PesaPal payment creation failed:', result.error);
+        throw new Error(result.error || 'Failed to create payment');
       }
 
-    } catch (error: any) {
-      console.error('💥 Payment error:', error);
-      
-      toast.error(error.message || 'Failed to create payment', {
-        description: 'Please try again or contact support.'
+    } catch (error) {
+      console.error('💥 PesaPal payment creation error:', error);
+      console.error('🔍 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
       });
+      
+      // Specific error messages for PesaPal
+      let errorMessage = 'Payment setup failed. Please try again.';
+      
+      if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message.includes('authentication') || error.message.includes('token')) {
+        errorMessage = 'Payment service authentication error. Please contact support.';
+      } else if (error.message.includes('order')) {
+        errorMessage = 'Order creation failed. Please try again.';
+      } else if (error.message.includes('PesaPal')) {
+        errorMessage = 'PesaPal service temporarily unavailable. Please try again later.';
+      }
+      
+      toast.error(errorMessage);
       onClose();
     }
   };
 
   // This component doesn't render anything - it's purely functional
-  // It just handles the payment flow and redirects
   return null;
 }

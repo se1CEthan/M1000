@@ -103,9 +103,9 @@ export default function Help() {
           badge: 'Essential'
         },
         {
-          title: 'Cryptocurrency Wallet Setup',
-          description: 'How to set up your cryptocurrency wallet for payouts',
-          path: '/help/crypto-wallet-setup',
+          title: 'PesaPal Payment Setup',
+          description: 'How to set up your PesaPal payment methods',
+          path: '/help/pesapal-payment-setup',
           badge: 'Required',
           popular: true
         },

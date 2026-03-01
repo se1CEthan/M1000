@@ -18,9 +18,8 @@ import { supabase } from '@/integrations/supabase/clients';
 const verificationSchema = z.object({
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),
   date_of_birth: z.string().min(1, 'Date of birth is required'),
-    phone_number: z.string().min(10, 'Valid phone number is required'),
-    // Removed wallet, only phone number for seller verification
-    // mobile_money_number: z.string().min(10, 'Valid mobile money number is required for payouts'),
+  phone_number: z.string().min(10, 'Valid phone number is required'),
+  mobile_money_number: z.string().min(10, 'Valid mobile money number is required for payouts'),
   address_line1: z.string().min(5, 'Address is required'),
   address_line2: z.string().optional(),
   city: z.string().min(2, 'City is required'),
@@ -196,21 +195,20 @@ export function SellerVerificationForm({ onSuccess }: SellerVerificationFormProp
             )}
           </div>
 
-            {/* Removed mobile money number input as per new requirements */}
-            {/* <div className="space-y-2">
-              <Label htmlFor="mobile_money_number">Mobile Money Number (for payouts) *</Label>
-              <Input
-                id="mobile_money_number"
-                {...register('mobile_money_number')}
-                placeholder="+256 700 123 456 (MTN Mobile Money or Airtel Money)"
-              />
-              <p className="text-xs text-muted-foreground">
-                This number will be used for your seller payouts via mobile money transfer
-              </p>
-              {errors.mobile_money_number && (
-                <p className="text-sm text-destructive">{errors.mobile_money_number.message}</p>
-              )}
-            </div> */}
+          <div className="space-y-2">
+            <Label htmlFor="mobile_money_number">Mobile Money Number (for payouts) *</Label>
+            <Input
+              id="mobile_money_number"
+              {...register('mobile_money_number')}
+              placeholder="+256 700 123 456 (MTN Mobile Money or Airtel Money)"
+            />
+            <p className="text-xs text-muted-foreground">
+              This number will be used for your seller payouts via mobile money transfer
+            </p>
+            {errors.mobile_money_number && (
+              <p className="text-sm text-destructive">{errors.mobile_money_number.message}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 

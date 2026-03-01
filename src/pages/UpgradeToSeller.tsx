@@ -89,7 +89,7 @@ export default function UpgradeToSeller() {
                 <Users className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-semibold mb-2">Global Reach</h3>
                 <p className="text-sm text-muted-foreground">
-                  Sell to developers worldwide with cryptocurrency payments (BTC, ETH, USDT)
+                  Sell to developers worldwide with PesaPal payments (MTN, Airtel, Visa, Bank and International Cards)
                 </p>
               </CardContent>
             </Card>

@@ -59,7 +59,7 @@ export default function ProductDetail() {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!user) {
       toast.error('Please log in to purchase this product');
       return;
@@ -76,8 +76,16 @@ export default function ProductDetail() {
       return;
     }
 
-    // Open Cryptomus payment modal
-    setShowPaymentModal(true);
+    // Confirm payment amount in UGX
+    const ugxAmount = product.price * 1000;
+    const confirmMsg = `You will be redirected to PesaPal to pay ${new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(ugxAmount)} for this product. Continue?`;
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
+    // Redirect to PesaPal payment page
+    const returnUrl = encodeURIComponent(`${window.location.origin}/order-success?product=${product.id}`);
+    window.location.href = `https://store.pesapal.com/seltech?amount=${ugxAmount}&desc=${encodeURIComponent(product.title)}&reference=${product.id}&return_url=${returnUrl}`;
   };
 
   const handlePaymentSuccess = (orderId: string) => {
@@ -205,7 +213,7 @@ export default function ProductDetail() {
                   currency: 'UGX',
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
-                }).format(product.price * 3700)}
+                }).format(product.price * 1000)}
               </div>
             </div>
 
@@ -217,7 +225,7 @@ export default function ProductDetail() {
               </p>
             </div>
 
-            {/* Buy Button - Cryptomus Payment */}
+            {/* Buy Button - Multiple Payment Options */}
             <div className="space-y-4">
               <Button 
                 onClick={handleBuyNow}
@@ -226,17 +234,12 @@ export default function ProductDetail() {
                 disabled={!user || (user && user.id === product.seller_id)}
               >
                 <Zap className="h-5 w-5 mr-2" />
-                {!user ? 'Login to Buy' : user.id === product.seller_id ? 'Your Product' : 'Buy Now - Pay with Crypto'}
+                {!user ? 'Login to Buy' : user.id === product.seller_id ? 'Your Product' : 'Buy Now - PesaPal (MTN, Airtel, Visa, Bank and International Cards)'}
               </Button>
               
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                <span>Secure Cryptomus payment • BTC, ETH, USDT • 90% to seller</span>
-              </div>
-              
-              {/* Cryptomus Info */}
-              <div className="text-center text-xs text-muted-foreground">
-                <p>Powered by Cryptomus - Accept 100+ cryptocurrencies</p>
+                <span>Secure payment • PesaPal (MTN, Airtel, Visa, Bank and International Cards) • 90% goes to seller</span>
               </div>
             </div>
 
@@ -308,7 +311,7 @@ export default function ProductDetail() {
         </Card>
       </div>
 
-      {/* Cryptomus Payment Widget */}
+      {/* Instant Payment Widget */}
       {product && (
         <InstantPaymentWidget
           isOpen={showPaymentModal}

@@ -161,7 +161,7 @@ export default async function handler(req: Request): Promise<Response> {
       order_id: order.id,
       url_return: returnUrl || `${baseUrl}/order-success?order=${order.id}`,
       url_success: successUrl || `${baseUrl}/order-success?order=${order.id}`,
-      // url_callback removed for simpler flow
+      url_callback: callbackUrl || `${baseUrl}/api/webhooks/cryptomus`,
       to_currency: toCurrency,
       lifetime: 3600, // 1 hour
       is_payment_multiple: false,

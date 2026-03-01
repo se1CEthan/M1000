@@ -203,9 +203,7 @@ export function ProductReviewDetail({ product, onBack, onReviewed, onAction }: P
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Price:</span>
-                      <div>
-                        <span className="font-semibold">UGX {Math.round((product.price || 0) * 3700).toLocaleString()}</span>
-                      </div>
+                      <span className="font-semibold">${product.price?.toFixed(2) || '0.00'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-muted-foreground" />
@@ -324,7 +322,7 @@ export function ProductReviewDetail({ product, onBack, onReviewed, onAction }: P
                   <div className="flex items-center gap-3">
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Live Preview</p>
+                      <p className="font-medium">Demo URL</p>
                       <p className="text-sm text-muted-foreground truncate max-w-xs">
                         {product.demo_url}
                       </p>
@@ -393,7 +391,7 @@ export function ProductReviewDetail({ product, onBack, onReviewed, onAction }: P
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                <span>Working preview/documentation links</span>
+                <span>Working demo/documentation links</span>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />

@@ -47,12 +47,6 @@ export function CryptomusWidget({ isOpen, onClose, product, onSuccess }: Cryptom
       return;
     }
 
-    // Validate product price
-    if (typeof product.price !== 'number' || isNaN(product.price) || product.price <= 0) {
-      toast.error('Invalid product price. Please contact support.');
-      return;
-    }
-
     setError('');
     setLoading(true);
 

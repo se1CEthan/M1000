@@ -307,7 +307,7 @@ export function AdminCharts({ products }: AdminChartsProps) {
             
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                UGX {Math.round(Object.values(revenueByCategory).reduce((sum, val) => sum + val, 0) * 3700).toLocaleString()}
+                ${Object.values(revenueByCategory).reduce((sum, val) => sum + val, 0).toFixed(0)}
               </div>
               <div className="text-sm text-muted-foreground">Total Revenue</div>
             </div>

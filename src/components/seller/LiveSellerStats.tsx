@@ -23,51 +23,43 @@ interface LiveSellerStatsProps {
 
 export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
   const { stats, loading, error, refetch } = useSellerStats();
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load seller statistics: {error}
+          <Button variant="outline" size="sm" onClick={refetch} className="ml-2">
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Phone Number Setup Alert */}
+      {/* Wallet Setup Alert */}
       {!stats.hasWallet && stats.pendingBalance > 0 && (
-        <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="flex items-center justify-between">
-            <div>
-              <strong className="text-yellow-800 dark:text-yellow-200">
-                UGX {stats.pendingBalance.toLocaleString()} Ready for Payout!
-              </strong>
-              <p className="text-yellow-700 dark:text-yellow-300">
-                Add your mobile money number to receive payouts.
-              </p>
-            </div>
-            <Button 
-              onClick={() => onTabChange?.('profile')}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white ml-4"
-              size="sm"
-            >
-              Add Phone Number
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Mobile Money Setup Alert */}
-      {!stats.hasWallet && stats.pendingEarnings > 0 && (
         <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
           <Wallet className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="flex items-center justify-between">
             <div>
               <strong className="text-yellow-800 dark:text-yellow-200">
-                UGX {(stats.pendingEarnings * 3700).toLocaleString()} Ready for Payout!
+                ${stats.pendingBalance.toFixed(2)} Ready for Payout!
               </strong>
               <p className="text-yellow-700 dark:text-yellow-300">
-                Setup your mobile money number to receive automatic payouts.
+                Setup your crypto wallet to receive automatic payouts.
               </p>
             </div>
             <Button 
-              onClick={() => onTabChange?.('payout')}
+              onClick={() => onTabChange?.('wallet')}
               className="bg-yellow-600 hover:bg-yellow-700 text-white ml-4"
               size="sm"
             >
-              Setup Mobile Money
+              Setup Wallet
             </Button>
           </AlertDescription>
         </Alert>
@@ -83,26 +75,26 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              UGX {loading ? '...' : (stats.totalRevenue * 3700).toLocaleString()}
+              ${loading ? '...' : stats.totalRevenue.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              +UGX {(stats.thisMonthRevenue * 3700).toLocaleString()} this month
+              +${stats.thisMonthRevenue.toFixed(2)} this month
             </p>
           </CardContent>
         </Card>
 
         {/* Pending Earnings */}
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onTabChange?.('payout')}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onTabChange?.('wallet')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              UGX {loading ? '...' : (stats.pendingEarnings * 3700).toLocaleString()}
+              ${loading ? '...' : stats.pendingEarnings.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.hasWallet ? 'Auto-payout enabled' : 'Setup mobile money for payout'}
+              {stats.hasWallet ? 'Auto-payout enabled' : 'Setup wallet for payout'}
             </p>
           </CardContent>
         </Card>
@@ -213,7 +205,7 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium text-sm">UGX {(order.seller_earnings * 3700)?.toLocaleString()}</div>
+                      <div className="font-medium text-sm">${order.seller_earnings?.toFixed(2)}</div>
                       <Badge 
                         variant={order.status === 'paid' ? 'default' : 'secondary'}
                         className="text-xs"
@@ -253,9 +245,9 @@ export function LiveSellerStats({ onTabChange }: LiveSellerStatsProps) {
                           <Package className="h-6 w-6 text-muted-foreground m-2" />
                         )}
                       </div>
-                      <div className="flex-1">
+                      <div>
                         <div className="font-medium text-sm">{product.title}</div>
-                        <div className="text-xs text-muted-foreground">UGX {(product.price * 3700)?.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">${product.price}</div>
                       </div>
                     </div>
                     <div className="text-right">

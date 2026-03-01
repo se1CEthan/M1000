@@ -90,19 +90,10 @@ export function AdminAnalyticsEnhanced({ products }: AdminAnalyticsEnhancedProps
     .sort((a: any, b: any) => b.revenue - a.revenue)
     .slice(0, 5);
 
-  // Calculate actual review time from database
-  const avgReviewTime = (() => {
-    const reviewedProducts = products.filter(p => p.status !== 'pending' && p.updated_at && p.created_at);
-    if (reviewedProducts.length === 0) return 0;
-    
-    const totalReviewTime = reviewedProducts.reduce((sum, product) => {
-      const created = new Date(product.created_at).getTime();
-      const updated = new Date(product.updated_at).getTime();
-      return sum + (updated - created);
-    }, 0);
-    
-    return totalReviewTime / reviewedProducts.length / (1000 * 60 * 60); // Convert to hours
-  })();
+  // Calculate review time (mock data for demonstration)
+  const avgReviewTime = products.filter(p => p.status !== 'pending').length > 0 
+    ? Math.random() * 48 + 12 // Mock: 12-60 hours
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -278,7 +269,7 @@ export function AdminAnalyticsEnhanced({ products }: AdminAnalyticsEnhancedProps
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Revenue:</span>
                   <span className="font-medium">
-                    UGX {Math.round(monthlyData.reduce((sum, month) => sum + month.revenue, 0) * 3700).toLocaleString()}
+                    ${monthlyData.reduce((sum, month) => sum + month.revenue, 0).toFixed(2)}
                   </span>
                 </div>
               </div>

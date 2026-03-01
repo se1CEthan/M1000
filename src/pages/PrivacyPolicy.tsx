@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li>Email address and account credentials</li>
                   <li>Profile information (name, bio, profile picture)</li>
-                  <li>Payment information (cryptocurrency wallet addresses)</li>
+                  <li>Payment information (PesaPal payment methods)</li>
                   <li>Communication preferences</li>
                 </ul>
               </div>

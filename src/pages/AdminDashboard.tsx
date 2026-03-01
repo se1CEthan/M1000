@@ -59,19 +59,23 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
-      // Fetch products with seller profile info
-      const { data, error } = await supabase
+      // Fetch products for review
+      const productsResult = await supabase
         .from('products')
-        .select(`*, profiles:profiles!products_seller_id_fkey(full_name, email, avatar_url)`) // Adjust join key as needed
+        .select(`
+          *,
+          profiles!products_seller_id_fkey(full_name, email, avatar_url)
+        `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (productsResult.error) throw productsResult.error;
+
+      setProducts(productsResult.data || []);
     } catch (error) {
+      console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load products',
+        description: 'Failed to load admin data',
         variant: 'destructive',
       });
     } finally {
@@ -160,9 +164,9 @@ export default function AdminDashboard() {
       key: 'price',
       label: 'Price',
       render: (product) => (
-        <div className="text-sm">
-          <div className="font-medium">UGX {Math.round((product.price || 0) * 3700).toLocaleString()}</div>
-        </div>
+        <span className="text-sm font-medium">
+          ${product.price?.toFixed(2) || '0.00'}
+        </span>
       )
     },
     {
@@ -366,9 +370,9 @@ export default function AdminDashboard() {
                     key: 'price',
                     label: 'Price',
                     render: (product) => (
-                      <div className="text-xs sm:text-sm">
-                        <div className="font-medium">UGX {Math.round((product.price || 0) * 3700).toLocaleString()}</div>
-                      </div>
+                      <span className="text-xs sm:text-sm font-medium">
+                        ${product.price?.toFixed(2) || '0.00'}
+                      </span>
                     )
                   },
                   {

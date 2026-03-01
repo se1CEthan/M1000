@@ -21,16 +21,10 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Ultra-fast payment initiation (Cryptomus)
+  // Ultra-fast payment initiation
   const initiatePayment = useCallback(async () => {
     if (!user) {
       setError('Please log in to make a purchase');
-      return;
-    }
-
-    // Validate product price
-    if (typeof product.price !== 'number' || isNaN(product.price) || product.price <= 0) {
-      setError('Invalid product price. Please contact support.');
       return;
     }
 
@@ -38,19 +32,22 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
     setError('');
 
     try {
-      // Use Cryptomus API to create payment widget
-      const response = await fetch('/api/cryptomus/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product.id,
-          buyerId: user.id,
-          productPrice: product.price,
-          productTitle: product.title,
-          sellerId: product.seller_id
-        })
+      // Check if user can purchase (fast)
+      const canPurchase = await UltraFastPayment.canPurchase(product.id, user.id);
+      if (!canPurchase) {
+        setError('You already own this product');
+        setIsLoading(false);
+        return;
+      }
+
+      // Create payment instantly
+      const result = await UltraFastPayment.createPayment({
+        productId: product.id,
+        buyerId: user.id,
+        productPrice: product.price,
+        productTitle: product.title,
+        sellerId: product.seller_id
       });
-      const result = await response.json();
 
       if (result.success && result.widgetUrl && result.orderId) {
         setWidgetUrl(result.widgetUrl);
@@ -164,6 +161,3 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
     </Dialog>
   );
 }
-
-
-//Man that club hasn't been the same since we lost mercedes

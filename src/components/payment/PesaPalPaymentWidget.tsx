@@ -123,6 +123,6 @@ export function PesaPalPaymentWidget({ isOpen, onClose, product }: PesaPalPaymen
     }
   };
 
-  // This component doesn't render anything - it's purely functional. the is written by pacman_ftp
+  // This component doesn't render anything - it's purely functional
   return null;
 }

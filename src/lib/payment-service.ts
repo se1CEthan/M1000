@@ -1,6 +1,12 @@
 import { supabase } from '@/integrations/supabase/clients';
-// Remove all Cryptomus and PesaPal imports
-import { supabase } from '@/integrations/supabase/clients';
+import { 
+  calculateRevenueSplit,
+  SUPPORTED_CURRENCIES,
+  createPayout,
+  type CreateInvoiceRequest 
+} from './cryptomus';
+import { AirtelPaymentService } from './airtel-payment';
+import { LivePayoutSystem } from './payout-system';
 import { Profile } from '@/types/database';
 
 export interface PaymentInitiationData {
@@ -67,25 +73,28 @@ export class PaymentService {
         return { success: false, error: 'You already own this product' };
       }
 
-      // 4. Calculate revenue split (simple 90/10)
-      const platformFee = product.price * 0.1;
-      const sellerEarnings = product.price * 0.9;
+      // 4. Calculate revenue split
+      const revenueSplit = calculateRevenueSplit(product.price);
+      console.log('Revenue split:', revenueSplit);
 
-      // 5. Create order record
+      // 5. Create order record using auth user ID directly (no foreign key dependency)
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      
       const orderData = {
-        buyer_id: authUser.user.id,
+        buyer_id: authUser.user.id,  // Use auth user ID directly
         seller_id: product.seller_id,
         product_id: data.productId,
         order_number: orderNumber,
         status: 'pending' as const,
         price: product.price,
-        platform_fee: platformFee,
-        seller_earnings: sellerEarnings,
+        platform_fee: revenueSplit.platformFee,
+        seller_earnings: revenueSplit.sellerEarnings,
         payment_method: 'cryptocurrency',
         currency: 'USD',
         crypto_currency: data.currency
       };
+
+      console.log('Creating order with data:', orderData);
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -93,48 +102,87 @@ export class PaymentService {
         .select()
         .single();
 
-      if (orderError || !order) {
-        return { success: false, error: 'Failed to create order' };
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        return { success: false, error: `Failed to create order: ${orderError.message}` };
       }
 
-      // 6. Create NOWPayments invoice
-      const nowPaymentsApiKey = 'ZNGD7SV-MD74WZK-QSSY2K5-6CW1K3D';
-      const invoiceResponse = await fetch('https://api.nowpayments.io/v1/invoice', {
+      if (!order) {
+        return { success: false, error: 'Failed to create order - no data returned' };
+      }
+
+      console.log('Order created successfully:', order.id);
+
+      // 6. Create Cryptomus payment invoice via server-side API
+      const invoiceData: CreateInvoiceRequest = {
+        amount: product.price.toString(),
+        currency: 'USD',
+        order_id: order.id,
+        url_return: `${window.location.origin}/order-success?order=${order.id}`,
+        url_success: `${window.location.origin}/order-success?order=${order.id}`,
+        url_callback: `${window.location.origin}/api/webhooks/cryptomus`,
+        to_currency: data.currency,
+        lifetime: 3600, // 1 hour expiry
+      };
+
+      console.log('Creating Cryptomus invoice via API:', invoiceData);
+
+      // Call server-side API endpoint instead of direct Cryptomus call
+      const apiResponse = await fetch('/api/cryptomus/create-payment', {
         method: 'POST',
         headers: {
-          'x-api-key': nowPaymentsApiKey,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          price_amount: product.price,
-          price_currency: 'usd',
-          pay_currency: 'usdt',
-          order_id: order.id,
-          order_description: product.title,
-          success_url: `${window.location.origin}/order-success?order=${order.id}`,
-          cancel_url: `${window.location.origin}/marketplace`,
-        })
+        body: JSON.stringify(invoiceData),
       });
-      const invoiceData = await invoiceResponse.json();
 
-      if (!invoiceData.invoice_url) {
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json().catch(() => ({ error: 'Unknown API error' }));
+        console.error('API response error:', errorData);
+        
+        // Update order status to failed
         await supabase
           .from('orders')
           .update({ status: 'refunded' as const })
           .eq('id', order.id);
-        return { success: false, error: invoiceData.message || 'Failed to create payment invoice' };
+
+        return { success: false, error: errorData.error || 'Failed to create payment invoice' };
       }
 
-      // Optionally update order with invoice info
-      await supabase
+      const paymentResponse = await apiResponse.json();
+      console.log('Cryptomus response via API:', paymentResponse);
+
+      if (paymentResponse.state !== 0) {
+        console.error('Cryptomus invoice creation failed:', paymentResponse);
+        
+        // Update order status to failed
+        await supabase
+          .from('orders')
+          .update({ status: 'refunded' as const })
+          .eq('id', order.id);
+
+        return { success: false, error: 'Failed to create payment invoice' };
+      }
+
+      // 7. Update order with payment details
+      const updateResult = await supabase
         .from('orders')
-        .update({ payment_id: invoiceData.id })
+        .update({
+          payment_id: paymentResponse.result.uuid,
+          crypto_amount: parseFloat(paymentResponse.result.payer_amount || '0')
+        })
         .eq('id', order.id);
+
+      if (updateResult.error) {
+        console.error('Order update error:', updateResult.error);
+      }
+
+      console.log('Payment initiated successfully');
 
       return {
         success: true,
         orderId: order.id,
-        paymentUrl: invoiceData.invoice_url,
+        paymentUrl: paymentResponse.result.url,
       };
 
     } catch (error) {
@@ -162,10 +210,70 @@ export class PaymentService {
         return { success: false, error: 'Order not found' };
       }
 
-      // Check payment status with NOWPayments
-      // You may need to implement a webhook or polling for NOWPayments status
-      // For now, just return success if order exists
-      return { success: true, status: order.status };
+      // Check payment status with Cryptomus via server-side API
+      const statusResponse = await fetch('/api/cryptomus/check-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uuid: order.payment_id }),
+      });
+
+      if (!statusResponse.ok) {
+        const errorData = await statusResponse.json().catch(() => ({ error: 'Unknown API error' }));
+        console.error('Status API error:', errorData);
+        return { success: false, error: 'Failed to check payment status' };
+      }
+
+      const paymentStatus = await statusResponse.json();
+
+      if (paymentStatus.state !== 0) {
+        return { success: false, error: 'Failed to check payment status' };
+      }
+
+      const cryptomusStatus = paymentStatus.result.payment_status;
+      let orderStatus: string = order.status;
+
+      // Map Cryptomus status to our order status
+      switch (cryptomusStatus) {
+        case 'paid':
+        case 'paid_over':
+          orderStatus = 'paid';
+          break;
+        case 'fail':
+        case 'cancel':
+        case 'system_fail':
+          orderStatus = 'refunded';
+          break;
+        case 'process':
+        case 'confirm_check':
+          orderStatus = 'pending';
+          break;
+        default:
+          orderStatus = 'pending';
+      }
+
+      // Update order status
+      const updateData: any = { status: orderStatus };
+      
+      if (orderStatus === 'paid') {
+        updateData.completed_at = new Date().toISOString();
+        // Generate download URL (you'll need to implement this based on your file storage)
+        updateData.download_url = await this.generateDownloadUrl(order.product_id);
+        updateData.download_expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+      }
+
+      await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId);
+
+      // If payment is completed, process seller payout using new system
+      if (orderStatus === 'paid' && order.status !== 'paid') {
+        await LivePayoutSystem.processAutomaticPayout(orderId);
+      }
+
+      return { success: true, status: orderStatus };
 
     } catch (error) {
       console.error('Payment status check error:', error);

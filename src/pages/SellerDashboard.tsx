@@ -62,12 +62,12 @@ export default function SellerDashboard() {
         supabase
           .from('products')
           .select('*')
-          .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
+          .eq('seller_id', profile.id)
           .order('created_at', { ascending: false }),
         supabase
           .from('orders')
           .select('*')
-          .eq('seller_id', profile.id) // Use profile.id instead of profile.user_id
+          .eq('seller_id', profile.id)
           .order('created_at', { ascending: false })
           .limit(50)
       ]);
@@ -107,7 +107,7 @@ export default function SellerDashboard() {
               const buyerResult = await supabase
                 .from('profiles')
                 .select('full_name, email')
-                .eq('id', order.buyer_id) // Use id instead of user_id
+                .eq('id', order.buyer_id)
                 .single();
               
               if (!buyerResult.error) {
@@ -126,7 +126,7 @@ export default function SellerDashboard() {
         })
       );
 
-      setProducts(products as Product[]);
+      setProducts(products);
       setOrders(enrichedOrders);
 
     } catch (error) {
@@ -196,9 +196,7 @@ export default function SellerDashboard() {
           </div>
           <div>
             <div className="font-medium">{product.title}</div>
-            <div className="text-sm text-muted-foreground">
-              UGX {Math.round((product.price || 0) * 3700).toLocaleString()}
-            </div>
+            <div className="text-sm text-muted-foreground">${product.price}</div>
           </div>
         </div>
       )
@@ -271,9 +269,9 @@ export default function SellerDashboard() {
       label: 'Amount',
       render: (order) => (
         <div>
-          <div className="font-medium">UGX {Math.round((order.price || 0) * 3700).toLocaleString()}</div>
-          <div className="text-xs text-green-600">
-            You earn: UGX {Math.round((order.seller_earnings || order.price * 0.9 || 0) * 3700).toLocaleString()}
+          <div className="font-medium">${order.price?.toFixed(2)}</div>
+          <div className="text-sm text-muted-foreground">
+            You earn: ${order.seller_earnings?.toFixed(2)}
           </div>
         </div>
       )
@@ -317,7 +315,7 @@ export default function SellerDashboard() {
             <BarChart3 className="h-4 w-4" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="payout" className="flex items-center gap-2">
+          <TabsTrigger value="wallet" className="flex items-center gap-2">
             <Wallet className="h-4 w-4" />
             Crypto Wallet
             {!stats.hasWallet && <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>}
@@ -365,7 +363,7 @@ export default function SellerDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="payout">
+        <TabsContent value="wallet">
           <CryptoWalletSetup />
         </TabsContent>
 

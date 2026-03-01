@@ -63,7 +63,7 @@ export default function FAQ() {
     {
       id: '3',
       question: 'What payment methods do you accept?',
-      answer: 'We accept cryptocurrency payments through Cryptomus including Bitcoin (BTC), Ethereum (ETH), Tether (USDT), USD Coin (USDC), Litecoin (LTC), and TRON (TRX). This ensures fast, secure, and convenient transactions for customers globally.',
+      answer: 'We accept payments through PesaPal including MTN Mobile Money, Airtel Money, Visa/Mastercard, bank transfers, and other international payment cards. This ensures fast, secure, and convenient transactions for customers across Africa and globally.',
       category: 'buying',
       popular: true
     },
@@ -83,8 +83,8 @@ export default function FAQ() {
     },
     {
       id: '6',
-      question: 'How do I set up my cryptocurrency wallet for payouts?',
-      answer: 'As a seller, you need to configure your cryptocurrency wallet address to receive payments. Go to your seller dashboard, click on "Payment Methods" tab, and add your preferred crypto wallet address (USDT, BTC, ETH, etc.). Make sure to verify your wallet address as this is where you\'ll receive your earnings.',
+      question: 'How do I set up my PesaPal payment methods?',
+      answer: 'As a seller, you need to configure your PesaPal payment details to receive payments. Go to your seller dashboard, click on "Payment Methods" tab, and add your preferred payout method (mobile money, bank account, etc.). Make sure to verify your details as this is where you\'ll receive your earnings.',
       category: 'selling',
       popular: true
     },
@@ -103,7 +103,7 @@ export default function FAQ() {
     {
       id: '9',
       question: 'When do I get paid?',
-      answer: 'Cryptocurrency payments are processed automatically to your configured wallet address after each successful sale. Crypto payouts are typically processed within 24 hours after blockchain confirmation, ensuring fast and secure transfers.',
+      answer: 'Payments are processed automatically to your configured PesaPal payment method after each successful sale. Payments are typically processed within 1-3 business days depending on your chosen payout method (mobile money is faster than bank transfers).',
       category: 'selling'
     },
     {

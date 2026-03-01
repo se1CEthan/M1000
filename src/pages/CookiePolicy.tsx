@@ -161,7 +161,7 @@ export default function CookiePolicy() {
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <h4 className="font-semibold text-gray-900 mb-2">Cryptomus</h4>
                   <p className="text-sm text-gray-600">
-                    Handles cryptocurrency payment processing with Bitcoin, Ethereum, USDT, and other cryptocurrencies.
+                    Handles PesaPal payment processing with MTN, Airtel, Visa, Bank and International Cards.
                   </p>
                 </div>
               </div>

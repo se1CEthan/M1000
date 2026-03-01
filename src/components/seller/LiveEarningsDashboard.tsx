@@ -11,8 +11,8 @@ import {
   ArrowUpRight, 
   ArrowDownRight,
   Wallet,
-  RefreshCw,
-  Phone
+  CreditCard,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/clients';
 import { useAuth } from '@/hooks/useAuth';
@@ -57,58 +57,65 @@ export function LiveEarningsDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    if (profile?.user_id) {
+    if (profile) {
       fetchEarningsData();
-      const cleanup = subscribeToRealTimeUpdates();
-      return cleanup;
+      subscribeToRealTimeUpdates();
     }
-  }, [profile?.user_id]);
+  }, [profile]);
 
   const fetchEarningsData = async () => {
-    if (!profile?.user_id) return;
-
     try {
-      // Fetch orders (sales)
-      const { data: orders } = await supabase
+      setLoading(true);
+
+      // Get current month date range
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+      // Fetch earnings from orders
+      const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
-        .eq('seller_id', profile.user_id)
+        .select('seller_earnings, created_at, status')
+        .eq('seller_id', profile?.user_id)
         .eq('status', 'paid');
 
-      // Fetch payouts
-      const { data: payouts } = await supabase
-        .from('payouts')
-        .select('*')
-        .eq('seller_id', profile.user_id);
+      if (ordersError) throw ordersError;
 
-      // Calculate earnings
-      const totalEarnings = orders?.reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
-      const totalPayouts = payouts?.reduce((sum, payout) => sum + (payout.amount || 0), 0) || 0;
-      const pendingBalance = totalEarnings - totalPayouts;
-
-      // Calculate monthly earnings
-      const now = new Date();
-      const thisMonth = now.getMonth();
-      const thisYear = now.getFullYear();
-      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-      const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
-      const thisMonthEarnings = orders?.filter(order => {
-        const orderDate = new Date(order.created_at);
-        return orderDate.getMonth() === thisMonth && orderDate.getFullYear() === thisYear;
-      }).reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
-
-      const lastMonthEarnings = orders?.filter(order => {
-        const orderDate = new Date(order.created_at);
-        return orderDate.getMonth() === lastMonth && orderDate.getFullYear() === lastMonthYear;
-      }).reduce((sum, order) => sum + (order.seller_earnings || 0), 0) || 0;
-
+      // Calculate earnings metrics
+      const totalEarnings = orders?.reduce((sum, order) => sum + order.seller_earnings, 0) || 0;
       const totalSales = orders?.length || 0;
       const averageOrderValue = totalSales > 0 ? totalEarnings / totalSales : 0;
 
-      // Combine transactions
+      const thisMonthEarnings = orders?.filter(order => 
+        new Date(order.created_at) >= startOfMonth
+      ).reduce((sum, order) => sum + order.seller_earnings, 0) || 0;
+
+      const lastMonthEarnings = orders?.filter(order => {
+        const orderDate = new Date(order.created_at);
+        return orderDate >= startOfLastMonth && orderDate <= endOfLastMonth;
+      }).reduce((sum, order) => sum + order.seller_earnings, 0) || 0;
+
+      // Get pending balance
+      const { data: balance } = await supabase
+        .from('seller_pending_balances')
+        .select('amount')
+        .eq('seller_id', profile?.user_id)
+        .single();
+
+      const pendingBalance = balance?.amount || 0;
+
+      // Get recent transactions (orders + payouts)
+      const { data: payouts } = await supabase
+        .from('payouts')
+        .select('*')
+        .eq('seller_id', profile?.user_id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Combine and sort transactions
       const transactions: RecentTransaction[] = [
-        ...(orders?.map(order => ({
+        ...(orders?.slice(-10).map(order => ({
           id: order.id,
           type: 'sale' as const,
           amount: order.seller_earnings,
@@ -121,9 +128,9 @@ export function LiveEarningsDashboard() {
           type: 'payout' as const,
           amount: payout.amount,
           status: payout.status,
-          description: 'Mobile Money Payout',
+          description: payout.description || 'Payout',
           created_at: payout.created_at,
-          transaction_id: payout.transaction_hash,
+          transaction_id: payout.transaction_id,
         })) || [])
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
@@ -198,7 +205,7 @@ export function LiveEarningsDashboard() {
 
   const requestPayout = async () => {
     if (earnings.pendingBalance < 10) {
-      toast.error('Minimum payout amount is UGX 37,000');
+      toast.error('Minimum payout amount is $10');
       return;
     }
 
@@ -238,12 +245,10 @@ export function LiveEarningsDashboard() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-UG', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'UGX',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount * 3700); // Convert USD to UGX
+      currency: 'USD',
+    }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
@@ -380,7 +385,7 @@ export function LiveEarningsDashboard() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">Next Payout Progress</h3>
               <span className="text-sm text-muted-foreground">
-                {formatCurrency(earnings.pendingBalance)} / UGX 37,000
+                {formatCurrency(earnings.pendingBalance)} / $10.00
               </span>
             </div>
             <Progress value={(earnings.pendingBalance / 10) * 100} className="mb-2" />
