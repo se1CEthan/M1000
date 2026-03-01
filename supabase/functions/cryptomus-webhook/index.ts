@@ -94,8 +94,8 @@ serve(async (req) => {
       }
 
       // Calculate and record seller payout (90/10 split)
-      const sellerEarnings = parseFloat(payment_amount || order.amount) * 0.9
-      const platformFee = parseFloat(payment_amount || order.amount) * 0.1
+      const sellerEarnings = parseFloat(payment_amount || order.price) * 0.9
+      const platformFee = parseFloat(payment_amount || order.price) * 0.1
 
       console.log('💰 Recording seller payout:', {
         seller: sellerEarnings,

@@ -28,6 +28,12 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
       return;
     }
 
+    // Validate product price
+    if (typeof product.price !== 'number' || isNaN(product.price) || product.price <= 0) {
+      setError('Invalid product price. Please contact support.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 

@@ -34,6 +34,13 @@ export function CoinPaymentsWidget({ isOpen, onClose, product }: CoinPaymentsWid
       return;
     }
 
+    // Validate product price
+    if (typeof product.price !== 'number' || isNaN(product.price) || product.price <= 0) {
+      toast.error('Invalid product price. Please contact support.');
+      onClose();
+      return;
+    }
+
     try {
       // Create order first
       const { data: order, error: orderError } = await supabase

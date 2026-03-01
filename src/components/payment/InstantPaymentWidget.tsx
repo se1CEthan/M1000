@@ -55,13 +55,25 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
       // STEP 2: Create order in YOUR database
       console.log('📝 Step 2: Creating order in database...');
       
+      // Validate product price
+      if (!product.price || product.price <= 0) {
+        throw new Error('Invalid product price');
+      }
+      
+      // Calculate revenue split (90% seller, 10% platform)
+      const price = Number(product.price);
+      const sellerEarnings = price * 0.9;
+      const platformFee = price * 0.1;
+      
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           product_id: product.id,
           seller_id: product.seller_id,
           buyer_id: user.id,
-          amount: product.price,
+          price: price,
+          platform_fee: platformFee,
+          seller_earnings: sellerEarnings,
           currency: 'USD',
           status: 'pending',
           payment_status: 'pending',

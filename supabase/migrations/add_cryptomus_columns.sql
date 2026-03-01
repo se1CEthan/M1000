@@ -49,7 +49,20 @@ BEGIN
   END IF;
 END $$;
 
--- Add amount column if it doesn't exist (some tables use 'price', some use 'amount')
+-- Make price column nullable if it's not already (some tables use 'amount' instead)
+DO $$ 
+BEGIN
+  ALTER TABLE public.orders ALTER COLUMN price DROP NOT NULL;
+EXCEPTION
+  WHEN undefined_column THEN
+    -- Column doesn't exist, that's fine
+    NULL;
+  WHEN others THEN
+    -- Column already nullable or other issue, continue
+    NULL;
+END $$;
+
+-- Add amount column if it doesn't exist (alternative to price)
 DO $$ 
 BEGIN
   IF NOT EXISTS (
@@ -59,6 +72,28 @@ BEGIN
     ALTER TABLE public.orders ADD COLUMN amount DECIMAL(10,2);
     COMMENT ON COLUMN public.orders.amount IS 'Order amount (alternative to price)';
   END IF;
+END $$;
+
+-- Make platform_fee nullable if needed
+DO $$ 
+BEGIN
+  ALTER TABLE public.orders ALTER COLUMN platform_fee DROP NOT NULL;
+EXCEPTION
+  WHEN undefined_column THEN
+    NULL;
+  WHEN others THEN
+    NULL;
+END $$;
+
+-- Make seller_earnings nullable if needed
+DO $$ 
+BEGIN
+  ALTER TABLE public.orders ALTER COLUMN seller_earnings DROP NOT NULL;
+EXCEPTION
+  WHEN undefined_column THEN
+    NULL;
+  WHEN others THEN
+    NULL;
 END $$;
 
 -- Create index on cryptomus_payment_id for faster lookups
