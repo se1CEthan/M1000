@@ -93,17 +93,12 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
       console.log('💳 Step 3: Creating Cryptomus payment invoice...');
       
       const baseUrl = window.location.origin;
-      const supabaseUrl = Deno.env?.get?.('SUPABASE_URL') || 'https://your-project.supabase.co';
-      
-      // Webhook URL - Cryptomus will call this when payment is confirmed
-      const webhookUrl = `${supabaseUrl}/functions/v1/cryptomus-webhook`;
       
       // Success/Return URLs - where user returns after payment
       const successUrl = `${baseUrl}/order-success?order_id=${order.id}`;
       const returnUrl = `${baseUrl}/order-success?order_id=${order.id}`;
       
       console.log('🔗 Payment URLs:', {
-        webhook: webhookUrl,
         success: successUrl,
         return: returnUrl
       });

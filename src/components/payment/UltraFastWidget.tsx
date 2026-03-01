@@ -21,7 +21,7 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Ultra-fast payment initiation
+  // Ultra-fast payment initiation (Cryptomus)
   const initiatePayment = useCallback(async () => {
     if (!user) {
       setError('Please log in to make a purchase');
@@ -38,14 +38,19 @@ export function UltraFastWidget({ isOpen, onClose, product, onSuccess }: UltraFa
     setError('');
 
     try {
-      // Use UltraFastPayment to create NOWPayments invoice
-      const result = await UltraFastPayment.createPayment({
-        productId: product.id,
-        buyerId: user.id,
-        productPrice: product.price,
-        productTitle: product.title,
-        sellerId: product.seller_id
+      // Use Cryptomus API to create payment widget
+      const response = await fetch('/api/cryptomus/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          buyerId: user.id,
+          productPrice: product.price,
+          productTitle: product.title,
+          sellerId: product.seller_id
+        })
       });
+      const result = await response.json();
 
       if (result.success && result.widgetUrl && result.orderId) {
         setWidgetUrl(result.widgetUrl);

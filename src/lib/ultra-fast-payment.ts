@@ -21,9 +21,8 @@ interface FastPaymentResult {
 }
 
 export class UltraFastPayment {
-  // NOWPayments widget base URL (replace with actual widget if needed)
-  private static widgetBaseUrl = 'https://nowpayments.io/payment/?';
-  private static apiKey = 'ZNGD7SV-MD74WZK-QSSY2K5-6CW1K3D';
+  // Cryptomus widget base URL (replace with actual widget if needed)
+  private static widgetBaseUrl = 'https://pay.cryptomus.com/paywidget?';
   
   /**
    * Create payment with minimal database operations
@@ -33,27 +32,23 @@ export class UltraFastPayment {
       // Generate order ID immediately (no database call needed yet)
       const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
-      // Create payment via NOWPayments API
-      const paymentResponse = await fetch('https://api.nowpayments.io/v1/invoice', {
+      // Create payment via Cryptomus API (replace with your actual endpoint)
+      const paymentResponse = await fetch('/api/cryptomus/create-payment', {
         method: 'POST',
-        headers: {
-          'x-api-key': this.apiKey,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          price_amount: data.productPrice,
-          price_currency: 'usd',
-          pay_currency: 'usdt',
-          order_id: orderId,
-          order_description: data.productTitle,
-          success_url: `https://seltech.online/order-success?order=${orderId}`,
-          cancel_url: 'https://seltech.online/marketplace',
+          productId: data.productId,
+          buyerId: data.buyerId,
+          productPrice: data.productPrice,
+          productTitle: data.productTitle,
+          sellerId: data.sellerId,
+          orderId
         })
       });
       const paymentResult = await paymentResponse.json();
 
-      // Use NOWPayments invoice URL for widget
-      const widgetUrl = paymentResult.invoice_url || '';
+      // Use Cryptomus widget URL for widget
+      const widgetUrl = paymentResult.widgetUrl || '';
 
       // Create order in background (non-blocking)
       this.createOrderAsync(data, orderId).catch(console.error);
@@ -72,7 +67,7 @@ export class UltraFastPayment {
     }
   }
   
-  // Widget URL is now provided by NOWPayments API response
+  // Widget URL is now provided by Cryptomus API response
   // No need for generateWidgetUrl
   
   /**

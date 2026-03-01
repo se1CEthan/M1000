@@ -193,7 +193,7 @@ export function MobileFriendlyWidget({ isOpen, onClose, product, onSuccess }: Mo
                   </div>
                   <h3 className="text-lg font-semibold">Mobile Payment</h3>
                   <p className="text-sm text-muted-foreground">
-                    Complete your payment securely with Crypto (NOWPayments)
+                    Complete your payment securely with Crypto (Cryptomus)
                   </p>
                 </div>
 
