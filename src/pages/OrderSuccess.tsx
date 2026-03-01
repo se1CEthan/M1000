@@ -39,7 +39,7 @@ export default function OrderSuccess() {
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
   useEffect(() => {
-    console.log('OrderSuccess mounted');
+    console.log('🎯 STEP 6: User returned to success page');
     console.log('User:', user);
     console.log('Order ID from URL:', orderId);
     console.log('Cryptomus Payment ID:', cryptomusPaymentId);
@@ -48,23 +48,26 @@ export default function OrderSuccess() {
     if (user) {
       // If we have an order ID, fetch that specific order
       if (orderId) {
-        console.log('Fetching order details for:', orderId);
+        console.log('📋 Fetching order details for:', orderId);
         fetchOrderDetails();
       } else {
         // If no order ID, get the most recent pending/completed order for this user
-        console.log('No order ID, fetching latest order');
+        console.log('📋 No order ID, fetching latest order');
         fetchLatestOrder();
       }
       
-      // Poll payment status every 10 seconds for pending payments
+      // STEP 7: Poll backend every 5 seconds to check if order is paid
+      console.log('⏰ STEP 7: Starting payment status polling...');
       const interval = setInterval(() => {
         if (paymentStatus === 'pending' || paymentStatus === '') {
+          console.log('🔄 Checking backend for payment confirmation...');
           checkPaymentStatus();
         }
-      }, 10000);
+      }, 5000); // Check every 5 seconds
+      
       return () => clearInterval(interval);
     } else {
-      console.log('No user logged in');
+      console.log('❌ No user logged in');
       setError('Please log in to view your order');
       setLoading(false);
     }
@@ -303,38 +306,48 @@ export default function OrderSuccess() {
   };
 
   const checkPaymentStatus = async (silent = false) => {
-    if (!order?.payment_id || paymentStatus === 'paid' || paymentStatus === 'completed') return;
+    if (!orderId) return;
 
     if (!silent) setRefreshing(true);
 
     try {
-      const result = await checkProductionPaymentStatus(order.payment_id);
+      console.log('🔍 STEP 7: Checking backend if order is paid...');
       
-      if (result.isPaid) {
+      // Query the database to check if order status changed to 'paid'
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('status, payment_status, download_url, download_expires_at')
+        .eq('id', orderId)
+        .single();
+
+      if (orderError) {
+        console.error('❌ Error checking order status:', orderError);
+        return;
+      }
+
+      console.log('📊 Order status from backend:', orderData);
+
+      // STEP 8: If order is PAID, unlock download
+      if (orderData.status === 'paid' || orderData.payment_status === 'completed') {
+        console.log('✅ STEP 8: Order is PAID - unlocking download!');
         setPaymentStatus('paid');
-        setPaymentDetails(result);
         
-        // Update order status in database
-        await supabase
-          .from('orders')
-          .update({ 
-            status: 'completed',
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', orderId);
-        
-        // Refresh order details to get download URL
+        // Refresh full order details to get download URL
         await fetchOrderDetails();
         
         toast.success('Payment confirmed! Your download is ready.');
+        
+        // Clear pending order from localStorage
+        localStorage.removeItem('pendingOrder');
+      } else if (orderData.status === 'failed') {
+        console.log('❌ Payment failed');
+        setPaymentStatus('failed');
       } else {
-        setPaymentDetails(result);
-        if (result.status === 'failed' || result.status === 'cancelled') {
-          setPaymentStatus('failed');
-        }
+        console.log('⏳ Payment still pending...');
+        setPaymentStatus('pending');
       }
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      console.error('❌ Error checking payment status:', error);
     } finally {
       if (!silent) setRefreshing(false);
     }
@@ -579,7 +592,7 @@ export default function OrderSuccess() {
             </CardContent>
           </Card>
 
-          {/* Download Section */}
+          {/* STEP 8: Download Section - Only shown when order is PAID */}
           {(paymentStatus === 'paid' || paymentStatus === 'completed') && order.download_url && (
             <Card className="mb-6 border-green-200 bg-green-50 dark:bg-green-900/20">
               <CardContent className="p-6">
@@ -587,10 +600,10 @@ export default function OrderSuccess() {
                   <Download className="h-10 w-10 text-green-600" />
                   <div className="flex-1">
                     <h3 className="font-semibold text-green-800 dark:text-green-200 text-lg">
-                      Your Download is Ready!
+                      ✅ Payment Confirmed - Download Unlocked!
                     </h3>
                     <p className="text-sm text-green-600 dark:text-green-300">
-                      Download expires on {order.download_expires_at ? 
+                      Your payment has been confirmed by Cryptomus. Download expires on {order.download_expires_at ? 
                         new Date(order.download_expires_at).toLocaleDateString() : 
                         'Never'
                       }
@@ -614,8 +627,9 @@ export default function OrderSuccess() {
             <Alert className="mb-6">
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Your cryptocurrency payment is being processed. This typically takes 5-15 minutes 
-                depending on blockchain confirmation. This page will automatically update when confirmed.
+                ⏳ Waiting for Cryptomus webhook confirmation. Your cryptocurrency payment is being processed. 
+                This typically takes 5-15 minutes depending on blockchain confirmation. 
+                This page will automatically check the backend every 5 seconds and unlock your download when payment is confirmed.
               </AlertDescription>
             </Alert>
           )}

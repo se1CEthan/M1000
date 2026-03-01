@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Product } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
-import { calculateRevenueSplit } from '@/lib/cryptomus';
 import { supabase } from '@/integrations/supabase/clients';
 import { toast } from 'sonner';
 
@@ -11,18 +10,30 @@ interface InstantPaymentWidgetProps {
   product: Product;
 }
 
+/**
+ * Cryptomus Payment Widget
+ * 
+ * Flow:
+ * 1️⃣ User clicks Buy
+ * 2️⃣ Create order in database (status: pending)
+ * 3️⃣ Redirect user to Cryptomus payment page
+ * 4️⃣ Cryptomus sends webhook when payment confirmed
+ * 5️⃣ Backend marks order as PAID
+ * 6️⃣ User returns to success page
+ * 7️⃣ Success page checks if order is paid
+ * 8️⃣ THEN unlock download
+ */
 export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymentWidgetProps) {
   const { user } = useAuth();
 
   useEffect(() => {
     if (isOpen && user && product) {
-      // Use Cryptomus payment processing with API
       handleCryptomusPayment();
     }
   }, [isOpen, user, product]);
 
   const handleCryptomusPayment = async () => {
-    console.log('🚀 Starting Cryptomus payment creation...');
+    console.log('🚀 Starting Cryptomus payment flow...');
     console.log('👤 User:', user?.id, user?.email);
     console.log('📦 Product:', product?.id, product?.title, product?.price);
 
@@ -41,30 +52,21 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
     }
 
     try {
-      console.log('📡 Creating Cryptomus payment with API...');
+      // STEP 2: Create order in YOUR database
+      console.log('📝 Step 2: Creating order in database...');
       
-      // Calculate revenue split (90% seller, 10% platform)
-      const revenueSplit = calculateRevenueSplit(product.price);
-      
-      console.log('💰 Revenue split:', {
-        total: revenueSplit.totalAmount,
-        seller: revenueSplit.sellerEarnings,
-        platform: revenueSplit.platformFee
-      });
-      
-      // Create order in database first
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           product_id: product.id,
           seller_id: product.seller_id,
           buyer_id: user.id,
-          price: product.price,
-          platform_fee: revenueSplit.platformFee,
-          seller_earnings: revenueSplit.sellerEarnings,
+          amount: product.price,
+          currency: 'USD',
           status: 'pending',
+          payment_status: 'pending',
           payment_method: 'cryptomus',
-          currency: 'USD'
+          order_number: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         })
         .select()
         .single();
@@ -73,69 +75,71 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
         throw new Error('Failed to create order: ' + (orderError?.message || 'Unknown error'));
       }
 
-      console.log('✅ Order created:', order.id);
+      console.log('✅ Order created in database:', order.id, order.order_number);
 
-      // Create Cryptomus payment invoice using API
-      const baseUrl = window.location.origin;
+      // STEP 3: Create Cryptomus payment and redirect
+      console.log('💳 Step 3: Creating Cryptomus payment invoice...');
       
-      // Success URL - redirects to order success page with order ID
+      const baseUrl = window.location.origin;
+      const supabaseUrl = Deno.env?.get?.('SUPABASE_URL') || 'https://your-project.supabase.co';
+      
+      // Webhook URL - Cryptomus will call this when payment is confirmed
+      const webhookUrl = `${supabaseUrl}/functions/v1/cryptomus-webhook`;
+      
+      // Success/Return URLs - where user returns after payment
       const successUrl = `${baseUrl}/order-success?order_id=${order.id}`;
       const returnUrl = `${baseUrl}/order-success?order_id=${order.id}`;
-      const callbackUrl = `${baseUrl}/api/webhooks/cryptomus`;
       
       console.log('🔗 Payment URLs:', {
+        webhook: webhookUrl,
         success: successUrl,
-        return: returnUrl,
-        callback: callbackUrl
+        return: returnUrl
       });
 
       const invoiceData = {
-        amount: product.price.toString(),
+        amount: product.price,
         currency: 'USD',
         order_id: order.id,
         url_return: returnUrl,
         url_success: successUrl,
-        url_callback: callbackUrl,
-        lifetime: 3600, // 1 hour
-        is_payment_multiple: false
+        url_callback: webhookUrl,
       };
 
-      console.log('📋 Creating Cryptomus invoice:', invoiceData);
+      console.log('📋 Invoice data:', invoiceData);
 
-      // Call Supabase Edge Function to create payment
-      const { data: result, error: functionError } = await supabase.functions.invoke('create-cryptomus-payment', {
-        body: invoiceData,
-        headers: {
-          'Content-Type': 'application/json'
+      // Call Supabase Edge Function to create Cryptomus payment
+      const { data: result, error: functionError } = await supabase.functions.invoke(
+        'create-cryptomus-payment',
+        {
+          body: invoiceData,
         }
-      });
+      );
 
       if (functionError) {
         console.error('❌ Edge function error:', functionError);
         throw new Error(functionError.message || 'Failed to create payment');
       }
 
-      console.log('📋 Payment API Result:', result);
+      console.log('📨 Cryptomus response:', result);
 
       if (result.success && result.payment_url) {
-        console.log('✅ Cryptomus payment created successfully');
+        console.log('✅ Payment invoice created successfully');
         console.log('🔗 Payment URL:', result.payment_url);
-        console.log('💳 Payment UUID:', result.payment_id);
+        console.log('💳 Payment ID:', result.payment_id);
 
         // Update order with payment details
         await supabase
           .from('orders')
           .update({
-            payment_id: result.payment_id,
+            cryptomus_payment_id: result.payment_id,
             payment_url: result.payment_url,
-            crypto_currency: result.currency || 'USDT'
           })
           .eq('id', order.id);
 
         // Store order info for success page
         localStorage.setItem('pendingOrder', JSON.stringify({
           orderId: order.id,
-          orderNumber: order.id,
+          orderNumber: order.order_number,
           productTitle: product.title,
           amount: product.price,
           currency: 'USD',
@@ -144,30 +148,30 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
           timestamp: Date.now()
         }));
 
-        // Close modal immediately
+        // Close modal
         onClose();
 
-        // Show payment redirect toast
+        // Show redirect message
         toast.success('Redirecting to Cryptomus payment...', {
           description: 'Pay with cryptocurrency (BTC, ETH, USDT, etc.)',
           duration: 2000
         });
 
-        // Redirect to Cryptomus payment page
+        // STEP 3: Redirect to Cryptomus payment page
         console.log('🚀 Redirecting to Cryptomus payment page...');
         setTimeout(() => {
           window.location.href = result.payment_url;
         }, 1000);
 
       } else {
-        console.log('❌ Cryptomus payment creation failed:', result);
+        console.error('❌ Failed to create payment invoice:', result);
         
         // Update order status to failed
         await supabase
           .from('orders')
           .update({ 
             status: 'failed',
-            error_message: result.error || 'Payment invoice creation failed'
+            payment_status: 'failed',
           })
           .eq('id', order.id);
         
@@ -175,33 +179,16 @@ export function InstantPaymentWidget({ isOpen, onClose, product }: InstantPaymen
       }
 
     } catch (error: any) {
-      console.error('💥 Cryptomus payment creation error:', error);
-      console.error('🔍 Error details:', {
-        name: error?.name,
-        message: error?.message,
-        stack: error?.stack
-      });
+      console.error('💥 Payment error:', error);
       
-      // Specific error messages for Cryptomus
-      let errorMessage = 'Payment setup failed. Please try again.';
-      
-      if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error?.message?.includes('authentication') || error?.message?.includes('signature')) {
-        errorMessage = 'Payment service authentication error. Please contact support.';
-      } else if (error?.message?.includes('order')) {
-        errorMessage = 'Order creation failed. Please try again.';
-      } else if (error?.message?.includes('Cryptomus')) {
-        errorMessage = 'Cryptomus service temporarily unavailable. Please try again later.';
-      }
-      
-      toast.error(errorMessage, {
-        description: 'If the problem persists, please contact support.'
+      toast.error(error.message || 'Failed to create payment', {
+        description: 'Please try again or contact support.'
       });
       onClose();
     }
   };
 
   // This component doesn't render anything - it's purely functional
+  // It just handles the payment flow and redirects
   return null;
 }

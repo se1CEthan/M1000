@@ -217,7 +217,7 @@ export default function ProductDetail() {
               </p>
             </div>
 
-            {/* Buy Button - Multiple Payment Options */}
+            {/* Buy Button - Cryptomus Payment */}
             <div className="space-y-4">
               <Button 
                 onClick={handleBuyNow}
@@ -231,7 +231,12 @@ export default function ProductDetail() {
               
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                <span>Secure payment • Cryptocurrency • 90% goes to seller</span>
+                <span>Secure Cryptomus payment • BTC, ETH, USDT • 90% to seller</span>
+              </div>
+              
+              {/* Cryptomus Info */}
+              <div className="text-center text-xs text-muted-foreground">
+                <p>Powered by Cryptomus - Accept 100+ cryptocurrencies</p>
               </div>
             </div>
 
@@ -303,7 +308,7 @@ export default function ProductDetail() {
         </Card>
       </div>
 
-      {/* Instant Payment Widget */}
+      {/* Cryptomus Payment Widget */}
       {product && (
         <InstantPaymentWidget
           isOpen={showPaymentModal}

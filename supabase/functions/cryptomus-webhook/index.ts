@@ -1,5 +1,7 @@
 // Supabase Edge Function: Cryptomus Webhook Handler
-// Processes payment confirmations and triggers seller payouts
+// 
+// STEP 4: Cryptomus sends webhook when payment is confirmed
+// STEP 5: Backend marks order as PAID and generates download URL
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -18,14 +20,14 @@ serve(async (req) => {
   try {
     const payload = await req.json()
     
-    console.log('🔔 Cryptomus webhook received:', payload)
+    console.log('🔔 STEP 4: Cryptomus webhook received:', payload)
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Extract payment info
+    // Extract payment info from Cryptomus webhook
     const { order_id, status, payment_amount, currency, uuid } = payload
 
     if (!order_id) {
@@ -36,7 +38,9 @@ serve(async (req) => {
       )
     }
 
-    // Find the order
+    console.log('🔍 Looking up order:', order_id)
+
+    // Find the order in database
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('*, product:products(*)')
@@ -44,78 +48,90 @@ serve(async (req) => {
       .single()
 
     if (orderError || !order) {
-      console.error('❌ Order not found:', order_id)
+      console.error('❌ Order not found:', order_id, orderError)
       return new Response(
         JSON.stringify({ success: false, error: 'Order not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('📦 Order found:', order.order_number)
+    console.log('📦 Order found:', order.order_number, 'Status:', order.status)
 
-    // Update order status based on payment status
+    // STEP 5: Mark order as PAID when payment is confirmed
     if (status === 'paid' || status === 'paid_over') {
-      console.log('✅ Payment confirmed - updating order')
+      console.log('✅ STEP 5: Payment confirmed - marking order as PAID')
 
-      // Update order to paid
-      await supabase
+      // Generate download URL (expires in 30 days)
+      const downloadExpiresAt = new Date()
+      downloadExpiresAt.setDate(downloadExpiresAt.getDate() + 30)
+
+      // Update order to PAID status
+      const { error: updateError } = await supabase
         .from('orders')
         .update({
           status: 'paid',
           payment_status: 'completed',
           cryptomus_payment_id: uuid,
           paid_at: new Date().toISOString(),
+          download_url: order.product?.file_url || null,
+          download_expires_at: downloadExpiresAt.toISOString(),
         })
         .eq('id', order_id)
+
+      if (updateError) {
+        console.error('❌ Failed to update order:', updateError)
+        throw updateError
+      }
+
+      console.log('✅ Order marked as PAID with download URL')
 
       // Increment product download count
       if (order.product_id) {
         await supabase.rpc('increment_download_count', {
           product_id: order.product_id
         })
+        console.log('📊 Product download count incremented')
       }
 
-      // Trigger seller payout (90/10 split)
-      console.log('💰 Triggering seller payout...')
-      
+      // Calculate and record seller payout (90/10 split)
+      const sellerEarnings = parseFloat(payment_amount || order.amount) * 0.9
+      const platformFee = parseFloat(payment_amount || order.amount) * 0.1
+
+      console.log('💰 Recording seller payout:', {
+        seller: sellerEarnings,
+        platform: platformFee
+      })
+
+      // Create payout record
       try {
-        const payoutResponse = await fetch(
-          `${supabaseUrl}/functions/v1/process-seller-payout`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({
-              order_id: order.id,
-              seller_id: order.seller_id,
-              amount: parseFloat(payment_amount || order.price),
-              currency: currency || 'USD',
-            }),
-          }
-        )
+        await supabase
+          .from('payouts')
+          .insert({
+            seller_id: order.seller_id,
+            order_id: order.id,
+            amount: sellerEarnings,
+            currency: currency || 'USD',
+            status: 'pending',
+            payment_method: 'cryptomus',
+          })
 
-        const payoutResult = await payoutResponse.json()
-        console.log('💵 Payout result:', payoutResult)
-
-        if (!payoutResult.success) {
-          console.error('⚠️ Payout failed but order is paid:', payoutResult.error)
-          // Order is still paid, just payout failed - admin can handle manually
-        }
+        console.log('✅ Payout record created')
       } catch (payoutError) {
-        console.error('💥 Payout processing error:', payoutError)
-        // Continue - order is paid, payout can be retried
+        console.error('⚠️ Failed to create payout record:', payoutError)
+        // Continue - order is still paid
       }
 
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Payment confirmed and payout processed',
+          message: 'Payment confirmed - order marked as PAID',
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
-    } else if (status === 'cancel' || status === 'fail' || status === 'wrong_amount') {
+    } 
+    
+    // Handle failed payments
+    else if (status === 'cancel' || status === 'fail' || status === 'wrong_amount') {
       console.log('❌ Payment failed - updating order')
 
       await supabase
@@ -134,7 +150,10 @@ serve(async (req) => {
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
-    } else {
+    } 
+    
+    // Handle pending/processing payments
+    else {
       console.log('⏳ Payment pending:', status)
 
       await supabase
